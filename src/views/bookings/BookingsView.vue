@@ -305,7 +305,7 @@
 
     <!-- Cancel Confirmation Modal -->
     <div v-if="showCancelModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeCancelModal">
-      <div class="relative top-10 mx-auto p-5 border w-[500px] shadow-lg rounded-md bg-white" @click.stop>
+      <div class="relative top-10 mx-auto p-5 border w-[700px] shadow-lg rounded-md bg-white" @click.stop>
         <div class="mt-3">
           <div class="flex items-center justify-center mx-auto w-12 h-12 rounded-full bg-orange-100">
             <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
@@ -341,31 +341,13 @@
                   <label for="refundApplicable" class="text-sm font-medium text-blue-900">
                     Refund Applicable
                   </label>
-                  <p class="text-xs text-blue-700 mt-1">Check this if customer is eligible for refund</p>
+                  
                 </div>
               </div>
 
               <!-- Refund Details (shown when checkbox is checked) -->
               <div v-if="refundOptions.isRefundApplicable" class="mt-4 space-y-4 pl-7">
-                <!-- Refund Amount -->
-                <div>
-                  <label class="block text-sm font-medium text-blue-900 mb-1">Refund Amount</label>
-                  <div class="flex items-center space-x-2">
-                    <span class="text-sm text-blue-700">$</span>
-                    <input
-                      v-model="refundOptions.refundAmount"
-                      type="number"
-                      step="0.01"
-                      :max="bookingToCancel?.totalPrice"
-                      min="0"
-                      class="w-24 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="0.00"
-                    />
-                    <span class="text-xs text-blue-600">
-                      (Max: ${{ bookingToCancel?.totalPrice }})
-                    </span>
-                  </div>
-                </div>
+                
 
                 <!-- Payment Slip Upload Section -->
                 <div class="mt-4">
@@ -378,7 +360,7 @@
                     @dragenter.prevent="isDragging = true"
                     @dragleave.prevent="isDragging = false"
                     :class="[
-                      'border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors',
+                      'border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors mx-auto',
                       isDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
                     ]"
                     @click="triggerFileInput"
@@ -423,17 +405,6 @@
                     <p class="text-xs text-gray-600 mt-1">Uploading... {{ uploadProgress }}%</p>
                   </div>
                 </div>
-
-                <!-- Processing Method -->
-                <div>
-                  <label class="block text-sm font-medium text-blue-900 mb-1">Processing Method</label>
-                  <select v-model="refundOptions.processingMethod" class="w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                    <option value="original-payment">Refund to Original Payment Method</option>
-                    <option value="bank-transfer">Bank Transfer</option>
-                    <option value="cash">Cash Refund</option>
-                    <option value="store-credit">Store Credit</option>
-                  </select>
-                </div>
               </div>
             </div>
 
@@ -447,7 +418,7 @@
 
               <!-- Custom Reason Text -->
               <div class="space-y-2">
-                <label class="block text-xs font-medium text-purple-800">Detailed Explanation:</label>
+          
                 <textarea
                   v-model="cancellationReason.customMessage"
                   rows="3"

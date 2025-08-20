@@ -64,7 +64,7 @@
       </div>
 
       <!-- Stats Widgets -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <!-- Today's Bookings -->
         <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl shadow-card p-6 hover:shadow-card-hover transition-shadow">
           <div class="flex items-center">
@@ -102,6 +102,31 @@
               <h3 class="text-sm font-medium text-purple-600">Upcoming Bookings</h3>
               <p class="text-2xl font-bold text-purple-900">{{ stats.upcomingBookings }}</p>
               <p class="text-xs text-purple-500">Next 7 days</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PayMedia Commission -->
+        <div class="bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl shadow-card p-6 hover:shadow-card-hover transition-shadow">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path :d="mdiCashMultiple" />
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-sm font-medium text-indigo-600">PayMedia Commission</h3>
+              <p class="text-2xl font-bold text-indigo-900">${{ stats.payMediaCommission.toLocaleString() }}</p>
+              <p class="text-xs text-indigo-500 flex items-center">
+                <span :class="stats.payMediaTrend >= 0 ? 'text-green-600' : 'text-red-600'" class="flex items-center">
+                  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path :d="stats.payMediaTrend >= 0 ? mdiTrendingUp : mdiTrendingDown" />
+                  </svg>
+                  {{ stats.payMediaTrend >= 0 ? '+' : '' }}{{ stats.payMediaTrend }}% this month
+                </span>
+              </p>
             </div>
           </div>
         </div>
@@ -243,6 +268,8 @@ import {
   mdiCancel,
   mdiCurrencyUsd,
   mdiTrendingUp,
+  mdiTrendingDown,
+  mdiCashMultiple,
   mdiOfficeBuilding,
   mdiCalendarPlus,
   mdiMapMarker,
@@ -368,7 +395,9 @@ const stats = ref({
   todayBookings: 12,
   upcomingBookings: 18,
   cancellations: 2,
-  todayRevenue: 1250
+  todayRevenue: 1250,
+  payMediaCommission: 875,
+  payMediaTrend: 15.2
 })
 
 // Recent bookings data

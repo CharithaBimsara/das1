@@ -110,7 +110,6 @@
                     </div>
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
-                      <div class="text-sm text-gray-500">{{ product.type }}</div>
                     </div>
                   </div>
                 </td>
@@ -253,7 +252,7 @@ const companies = ref([
 const products = ref([
   {
     id: 'PROD001',
-    name: 'Executive Meeting Room',
+    name: 'Meeting Room',
     type: 'Meeting Room',
     locationName: 'Downtown Office',
     locationAddress: '123 Business St',
@@ -275,7 +274,7 @@ const products = ref([
   },
   {
     id: 'PROD002',
-    name: 'Flexible Hot Desk',
+    name: 'Hot Desk',
     type: 'Hot Desk',
     locationName: 'Tech Hub',
     locationAddress: '456 Innovation Ave',
@@ -298,7 +297,7 @@ const products = ref([
   },
   {
     id: 'PROD003',
-    name: 'Private Dedicated Desk',
+    name: 'Dedicated Desk',
     type: 'Dedicated Desk',
     locationName: 'Business Center',
     locationAddress: '789 Corporate Blvd',

@@ -10,6 +10,9 @@ import DashboardView from '@/views/DashboardView.vue'
 // Bookings
 import BookingsView from '@/views/bookings/BookingsView.vue'
 import BookingDetailView from '@/views/bookings/BookingDetailView.vue'
+import SubscriptionDetailView from '@/views/bookings/SubscriptionDetailView.vue'
+import CancelBookingView from '@/views/bookings/CancelBookingView.vue'
+
 
 
 // Customers
@@ -84,6 +87,25 @@ const routes: RouteRecordRaw[] = [
     path: '/bookings/:id',
     name: 'BookingDetail',
     component: BookingDetailView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/bookings/:id/cancel',
+    name: 'CancelBooking',
+    component: CancelBookingView,
+    meta: { requiresAuth: true }
+  },
+  
+  {
+    path: '/subscriptions/:id',
+    name: 'SubscriptionDetail',
+    component: SubscriptionDetailView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/subscriptions/:id/cancel',
+    name: 'CancelSubscription',
+    component: CancelBookingView,
     meta: { requiresAuth: true }
   },
   {

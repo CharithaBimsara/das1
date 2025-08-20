@@ -110,13 +110,23 @@
                 <option value="business-center">Business Center</option>
               </select>
             </div>
-            <div>
+            <!-- Show Product Type filter for bookings and history tabs -->
+            <div v-if="activeTab !== 'subscriptions'">
               <label class="block text-sm font-medium text-gray-700 mb-2">Product Type</label>
               <select v-model="filters.productType" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm text-gray-900">
                 <option value="">All Types</option>
                 <option value="Meeting Room">Meeting Room</option>
                 <option value="Hot Desk">Hot Desk</option>
                 <option value="Dedicated Desk">Dedicated Desk</option>
+              </select>
+            </div>
+            <!-- Show Subscription Type filter for subscriptions tab -->
+            <div v-if="activeTab === 'subscriptions'">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Subscription Type</label>
+              <select v-model="filters.subscriptionType" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm text-gray-900">
+                <option value="">All Periods</option>
+                <option value="monthly">Monthly</option>
+                <option value="annually">Annually</option>
               </select>
             </div>
             <div>
@@ -145,21 +155,24 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Booking ID
+                  {{ activeTab === 'subscriptions' ? 'Subscription ID' : 'Booking ID' }}
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Product
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Location
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Customer
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date & Time
+                  {{ activeTab === 'subscriptions' ? 'Subscribed Date' : 'Date & Time' }}
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th v-if="activeTab !== 'subscriptions'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Duration
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th v-if="activeTab !== 'subscriptions'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Price
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -178,26 +191,31 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                      <img class="h-10 w-10 rounded-lg object-cover" :src="booking.productImage" :alt="booking.productName">
+                      <img class="h-10 w-10 rounded-lg object-cover" :src="booking.productImage" :alt="booking.productType">
                     </div>
                     <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">{{ booking.productName }}</div>
-                      <div class="text-sm text-gray-500">{{ booking.productType }}</div>
+                      <div class="text-sm font-medium text-gray-900">{{ booking.productName || booking.productType }}</div>
+                      <div v-if="activeTab === 'subscriptions'" class="text-sm text-gray-500">{{ booking.subscriptionType }}</div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ booking.customerName }}</div>
-                  <div class="text-sm text-gray-500">{{ booking.userType }}</div>
+                  <div class="text-sm text-gray-900">{{ booking.locationName }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ booking.date }}</div>
-                  <div class="text-sm text-gray-500">{{ booking.startTime }} - {{ booking.endTime }}</div>
+                  <div class="text-sm text-gray-900">{{ booking.customerName }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div v-if="activeTab === 'subscriptions'" class="text-sm text-gray-900">{{ booking.subscribedDate }}</div>
+                  <div v-else>
+                    <div class="text-sm text-gray-900">{{ booking.date }}</div>
+                    <div class="text-sm text-gray-500">{{ booking.startTime }} - {{ booking.endTime }}</div>
+                  </div>
+                </td>
+                <td v-if="activeTab !== 'subscriptions'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {{ booking.duration }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td v-if="activeTab !== 'subscriptions'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   ${{ booking.totalPrice }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -214,19 +232,17 @@
                       </svg>
                     </router-link>
                     
-                    <!-- Alternative: View Details Button (programmatic navigation) -->
-                    <!-- <button @click="$router.push(viewBookingDetails(booking))" class="text-primary-600 hover:text-primary-900 flex items-center space-x-1" title="View Details">
-                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path :d="mdiEye" />
-                      </svg>
-                    </button> -->
-                    
-                    <!-- Actions for upcoming bookings -->
-                    <button v-if="activeTab === 'bookings' && booking.status !== 'cancelled'" @click="confirmCancelBooking(booking)" class="text-orange-600 hover:text-orange-900 flex items-center space-x-1" title="Cancel Booking">
+                    <!-- Cancel booking action for confirmed bookings and subscriptions -->
+                    <router-link
+                      v-if="booking.status === 'confirmed' && (activeTab === 'bookings' || activeTab === 'subscriptions')"
+                      :to="activeTab === 'subscriptions' ? `/subscriptions/${booking.id}/cancel` : `/bookings/${booking.id}/cancel`"
+                      class="text-orange-600 hover:text-orange-900 flex items-center space-x-1"
+                      title="Cancel Booking"
+                    >
                       <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path :d="mdiCancel" />
                       </svg>
-                    </button>
+                    </router-link>
                     
                     <!-- Actions for history bookings -->
                     <button v-if="activeTab === 'history'" @click="confirmDeleteBooking(booking)" class="text-red-600 hover:text-red-900 flex items-center space-x-1" title="Delete Booking">
@@ -303,211 +319,6 @@
       </div>
     </div>
 
-    <!-- Cancel Confirmation Modal -->
-    <div v-if="showCancelModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeCancelModal">
-      <div class="relative top-10 mx-auto p-5 border w-[700px] shadow-lg rounded-md bg-white" @click.stop>
-        <div class="mt-3">
-          <div class="flex items-center justify-center mx-auto w-12 h-12 rounded-full bg-orange-100">
-            <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
-              <path :d="mdiCancel" />
-            </svg>
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 text-center mt-4">Cancel Booking</h3>
-          <div class="mt-2 px-7 py-3">
-            <p class="text-sm text-gray-500 text-center">
-              Are you sure you want to cancel this booking? This action cannot be undone.
-            </p>
-            <div v-if="bookingToCancel" class="mt-4 p-3 bg-gray-50 rounded-lg text-gray-900">
-              <div class="text-sm space-y-1">
-                <div><strong>Booking ID:</strong> {{ bookingToCancel.id }}</div>
-                <div><strong>Customer:</strong> {{ bookingToCancel.customerName }}</div>
-                <div><strong>Product:</strong> {{ bookingToCancel.productName }}</div>
-                <div><strong>Date:</strong> {{ bookingToCancel.date }}</div>
-                <div><strong>Time:</strong> {{ bookingToCancel.startTime }} - {{ bookingToCancel.endTime }}</div>
-                <div><strong>Total Paid:</strong> ${{ bookingToCancel.totalPrice }}</div>
-              </div>
-            </div>
-
-            <!-- Refund Options -->
-            <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div class="flex items-start space-x-3">
-                <input
-                  id="refundApplicable"
-                  v-model="refundOptions.isRefundApplicable"
-                  type="checkbox"
-                  class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <div class="flex-1">
-                  <label for="refundApplicable" class="text-sm font-medium text-blue-900">
-                    Refund Applicable
-                  </label>
-                  
-                </div>
-              </div>
-
-              <!-- Refund Details (shown when checkbox is checked) -->
-              <div v-if="refundOptions.isRefundApplicable" class="mt-4 space-y-4 pl-7">
-                
-
-                <!-- Payment Slip Upload Section -->
-                <div class="mt-4">
-                  <label class="block text-sm font-medium text-blue-900 mb-2">Upload Payment Slip (Optional)</label>
-                  
-                  <!-- Drag and Drop Area -->
-                  <div
-                    @drop="handleFileDrop"
-                    @dragover.prevent="isDragging = true"
-                    @dragenter.prevent="isDragging = true"
-                    @dragleave.prevent="isDragging = false"
-                    :class="[
-                      'border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors mx-auto',
-                      isDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
-                    ]"
-                    @click="triggerFileInput"
-                  >
-                    <input
-                      ref="fileInput"
-                      type="file"
-                      class="hidden"
-                      accept="image/*,.pdf"
-                      @change="handleFileSelect"
-                    />
-                    
-                    <div v-if="!uploadedFile">
-                      <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                      </svg>
-                      <p class="mt-1 text-xs text-gray-600">
-                        <span class="font-medium text-blue-600">Click to upload</span> or drag and drop
-                      </p>
-                      <p class="text-xs text-gray-500">PNG, JPG, PDF up to 5MB</p>
-                    </div>
-                    
-                    <!-- File Preview -->
-                    <div v-else class="flex items-center justify-center space-x-2">
-                      <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                      <span class="text-sm text-green-700 font-medium">{{ uploadedFile.name }}</span>
-                      <button @click.stop="removeFile" class="text-red-500 hover:text-red-700">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <!-- File Upload Progress -->
-                  <div v-if="uploadProgress > 0 && uploadProgress < 100" class="mt-2">
-                    <div class="bg-gray-200 rounded-full h-2">
-                      <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="{ width: uploadProgress + '%' }"></div>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1">Uploading... {{ uploadProgress }}%</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          
-
-            <!-- Cancellation Reason Section -->
-            <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
-              <h4 class="text-sm font-medium text-purple-900 mb-3">Cancellation Reason</h4>
-              
-              
-
-              <!-- Custom Reason Text -->
-              <div class="space-y-2">
-          
-                <textarea
-                  v-model="cancellationReason.customMessage"
-                  rows="3"
-                  class="w-full text-sm border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Provide additional details about the cancellation reason for the customer..."
-                ></textarea>
-              </div>
-
-              <!-- Customer Notification Options -->
-              <div class="mt-4 pt-3 border-t border-purple-200">
-                <h5 class="text-xs font-medium text-purple-900 mb-2">Send Reason to Customer via:</h5>
-                <div class="space-y-2">
-                  <div class="flex items-start space-x-3">
-                    <input
-                      id="sendReasonEmail"
-                      v-model="cancellationReason.sendViaEmail"
-                      type="checkbox"
-                      class="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                      checked
-                    />
-                    <div class="flex-1">
-                      <label for="sendReasonEmail" class="text-xs font-medium text-purple-800">
-                        Email Notification with Reason
-                      </label>
-                      <input
-                        v-if="cancellationReason.sendViaEmail"
-                        v-model="cancellationReason.customerEmail"
-                        type="email"
-                        placeholder="customer@example.com"
-                        class="mt-1 block w-full text-xs border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="flex items-start space-x-3">
-                    <input
-                      id="sendReasonSMS"
-                      v-model="cancellationReason.sendViaSMS"
-                      type="checkbox"
-                      class="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                    />
-                    <div class="flex-1">
-                      <label for="sendReasonSMS" class="text-xs font-medium text-purple-800">
-                        SMS Notification with Reason
-                      </label>
-                      <input
-                        v-if="cancellationReason.sendViaSMS"
-                        v-model="cancellationReason.customerPhone"
-                        type="tel"
-                        placeholder="+1 (555) 123-4567"
-                        class="mt-1 block w-full text-xs border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Validation Message -->
-                <div v-if="!cancellationReason.sendViaEmail && !cancellationReason.sendViaSMS && cancellationReason.selectedReason" class="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 mt-2">
-                  <svg class="w-3 h-3 inline mr-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                  </svg>
-                  Consider notifying the customer about the cancellation reason for better customer service.
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center justify-center pt-4 space-x-4">
-            <button
-              @click="closeCancelModal"
-              class="px-4 py-2 bg-gray-200 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-300 transition-colors"
-            >
-              Keep Booking
-            </button>
-            <button
-              @click="cancelBooking"
-              :disabled="isCancelling"
-              class="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-md hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              <svg v-if="isCancelling" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>{{ isCancelling ? 'Cancelling & Processing...' : 'Cancel & Notify Customer' }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="closeDeleteModal">
       <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" @click.stop>
@@ -557,9 +368,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
-import { mdiEye, mdiPencil, mdiCancel, mdiDelete } from '@mdi/js'
+import { mdiEye, mdiPencil, mdiDelete, mdiCancel } from '@mdi/js'
 
 // State
 const activeTab = ref('bookings')
@@ -571,36 +382,10 @@ const showDeleteModal = ref(false)
 const bookingToDelete = ref<any>(null)
 const isDeleting = ref(false)
 
-// Cancel modal state
-const showCancelModal = ref(false)
-const bookingToCancel = ref<any>(null)
-const isCancelling = ref(false)
-
-// Refund and file upload state
-const refundOptions = ref({
-  isRefundApplicable: false,
-  refundAmount: 0,
-  processingMethod: 'original-payment',
-  adminNotes: ''
-})
-const uploadedFile = ref<File | null>(null)
-const isDragging = ref(false)
-const uploadProgress = ref(0)
-const fileInput = ref<HTMLInputElement | null>(null)
-
-// Cancellation reason state
-const cancellationReason = ref({
-  selectedReason: '',
-  customMessage: '',
-  sendViaEmail: true,
-  sendViaSMS: false,
-  customerEmail: '',
-  customerPhone: ''
-})
-
 // Tabs
 const tabs = [
   { id: 'bookings', name: 'Bookings' },
+  { id: 'subscriptions', name: 'Subscriptions' },
   { id: 'history', name: 'History' }
 ]
 
@@ -610,7 +395,8 @@ const filters = ref({
   endDate: '',
   location: '',
   productType: '',
-  userType: ''
+  userType: '',
+  subscriptionType: ''
 })
 
 // Pagination
@@ -686,7 +472,7 @@ const allBookings = ref([
   // Confirmed Bookings (Active)
   {
     id: 'BR-2034',
-    productName: 'Executive Meeting Room',
+    productName: 'Meeting Room',
     productType: 'Meeting Room',
     productId: 'PROD001',
     productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop&crop=center',
@@ -704,11 +490,11 @@ const allBookings = ref([
   },
   {
     id: 'BR-2035',
-    productName: 'Flexible Hot Desk',
+    productName: 'Hot Desk',
     productType: 'Hot Desk',
     productId: 'PROD002',
     productImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Jane Smith',
+    customerName: 'Michael Brown',
     userType: 'guest',
     date: '2025-08-21',
     startTime: '9:00 AM',
@@ -722,11 +508,11 @@ const allBookings = ref([
   },
   {
     id: 'BR-2036',
-    productName: 'Executive Meeting Room',
+    productName: 'Meeting Room',
     productType: 'Meeting Room',
     productId: 'PROD001',
     productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Robert Chen',
+    customerName: 'Sarah Wilson',
     userType: 'registered',
     date: '2025-08-22',
     startTime: '2:00 PM',
@@ -740,11 +526,11 @@ const allBookings = ref([
   },
   {
     id: 'BR-2037',
-    productName: 'Flexible Hot Desk',
+    productName: 'Hot Desk',
     productType: 'Hot Desk',
     productId: 'PROD002',
     productImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Emily Rodriguez',
+    customerName: 'Jane Smith',
     userType: 'registered',
     date: '2025-08-23',
     startTime: '8:00 AM',
@@ -757,30 +543,12 @@ const allBookings = ref([
     companyName: 'Tech Innovations Ltd.'
   },
   {
-    id: 'BR-2038',
-    productName: 'Private Dedicated Desk',
-    productType: 'Dedicated Desk',
-    productId: 'PROD003',
-    productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
-    customerName: 'David Kim',
-    userType: 'guest',
-    date: '2025-08-24',
-    startTime: '9:00 AM',
-    endTime: '6:00 PM',
-    duration: '9 hours',
-    totalPrice: 450, // Daily rate calculation
-    status: 'confirmed',
-    location: 'business-center',
-    locationName: 'Business Center',
-    companyName: 'Global Solutions Inc.'
-  },
-  {
     id: 'BR-2039',
-    productName: 'Executive Meeting Room',
+    productName: 'Meeting Room',
     productType: 'Meeting Room',
     productId: 'PROD001',
     productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Sophie Brown',
+    customerName: 'John Doe',
     userType: 'registered',
     date: '2025-08-25',
     startTime: '1:00 PM',
@@ -794,11 +562,11 @@ const allBookings = ref([
   },
   {
     id: 'BR-2040',
-    productName: 'Flexible Hot Desk',
+    productName: 'Hot Desk',
     productType: 'Hot Desk',
     productId: 'PROD002',
     productImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Alex Johnson',
+    customerName: 'Sarah Wilson',
     userType: 'registered',
     date: '2025-08-26',
     startTime: '10:00 AM',
@@ -810,33 +578,15 @@ const allBookings = ref([
     locationName: 'Tech Hub',
     companyName: 'Tech Innovations Ltd.'
   },
-  {
-    id: 'BR-2041',
-    productName: 'Private Dedicated Desk',
-    productType: 'Dedicated Desk',
-    productId: 'PROD003',
-    productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Maria Garcia',
-    userType: 'guest',
-    date: '2025-08-27',
-    startTime: '8:00 AM',
-    endTime: '5:00 PM',
-    duration: '9 hours',
-    totalPrice: 450, // Daily rate calculation
-    status: 'confirmed',
-    location: 'business-center',
-    locationName: 'Business Center',
-    companyName: 'Global Solutions Inc.'
-  },
 
   // Completed Bookings (History)
   {
     id: 'BR-2020',
-    productName: 'Executive Meeting Room',
+    productName: 'Meeting Room',
     productType: 'Meeting Room',
     productId: 'PROD001',
     productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Mike Johnson',
+    customerName: 'Jane Smith',
     userType: 'registered',
     date: '2025-08-15',
     startTime: '9:00 AM',
@@ -850,11 +600,11 @@ const allBookings = ref([
   },
   {
     id: 'BR-2021',
-    productName: 'Flexible Hot Desk',
+    productName: 'Hot Desk',
     productType: 'Hot Desk',
     productId: 'PROD002',
     productImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Lisa Thompson',
+    customerName: 'John Doe',
     userType: 'registered',
     date: '2025-08-16',
     startTime: '8:00 AM',
@@ -867,30 +617,12 @@ const allBookings = ref([
     companyName: 'Tech Innovations Ltd.'
   },
   {
-    id: 'BR-2022',
-    productName: 'Private Dedicated Desk',
-    productType: 'Dedicated Desk',
-    productId: 'PROD003',
-    productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Mark Anderson',
-    userType: 'guest',
-    date: '2025-08-17',
-    startTime: '10:00 AM',
-    endTime: '6:00 PM',
-    duration: '8 hours',
-    totalPrice: 400, // Daily rate calculation
-    status: 'completed',
-    location: 'business-center',
-    locationName: 'Business Center',
-    companyName: 'Global Solutions Inc.'
-  },
-  {
     id: 'BR-2023',
-    productName: 'Executive Meeting Room',
+    productName: 'Meeting Room',
     productType: 'Meeting Room',
     productId: 'PROD001',
     productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Anna Martinez',
+    customerName: 'Sarah Wilson',
     userType: 'registered',
     date: '2025-08-18',
     startTime: '1:00 PM',
@@ -904,11 +636,11 @@ const allBookings = ref([
   },
   {
     id: 'BR-2024',
-    productName: 'Flexible Hot Desk',
+    productName: 'Hot Desk',
     productType: 'Hot Desk',
     productId: 'PROD002',
     productImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Grace Lee',
+    customerName: 'David Miller',
     userType: 'guest',
     date: '2025-08-14',
     startTime: '9:00 AM',
@@ -920,33 +652,15 @@ const allBookings = ref([
     locationName: 'Tech Hub',
     companyName: 'Tech Innovations Ltd.'
   },
-  {
-    id: 'BR-2025',
-    productName: 'Private Dedicated Desk',
-    productType: 'Dedicated Desk',
-    productId: 'PROD003',
-    productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Kevin Brown',
-    userType: 'registered',
-    date: '2025-08-13',
-    startTime: '8:00 AM',
-    endTime: '5:00 PM',
-    duration: '9 hours',
-    totalPrice: 450, // Daily rate calculation
-    status: 'completed',
-    location: 'business-center',
-    locationName: 'Business Center',
-    companyName: 'Global Solutions Inc.'
-  },
 
   // Cancelled Bookings (History)
   {
     id: 'BR-2010',
-    productName: 'Executive Meeting Room',
+    productName: 'Meeting Room',
     productType: 'Meeting Room',
     productId: 'PROD001',
     productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Sarah Wilson',
+    customerName: 'Jennifer Wilson',
     userType: 'guest',
     date: '2025-08-12',
     startTime: '3:00 PM',
@@ -960,11 +674,11 @@ const allBookings = ref([
   },
   {
     id: 'BR-2011',
-    productName: 'Flexible Hot Desk',
+    productName: 'Hot Desk',
     productType: 'Hot Desk',
     productId: 'PROD002',
     productImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=100&fit=crop&crop=center',
-    customerName: 'James Wilson',
+    customerName: 'Kevin Martinez',
     userType: 'guest',
     date: '2025-08-11',
     startTime: '10:00 AM',
@@ -976,23 +690,70 @@ const allBookings = ref([
     locationName: 'Tech Hub',
     companyName: 'Tech Innovations Ltd.'
   },
+
+  // Subscription Data
   {
-    id: 'BR-2012',
-    productName: 'Private Dedicated Desk',
-    productType: 'Dedicated Desk',
-    productId: 'PROD003',
+    id: 'SUB-3001',
+    productName: 'Dedicated Desk',
+    productType: 'Subscription',
+    productId: 'SUB001',
     productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
-    customerName: 'Linda Davis',
+    customerName: 'John Doe',
     userType: 'registered',
-    date: '2025-08-10',
-    startTime: '9:00 AM',
-    endTime: '5:00 PM',
-    duration: '8 hours',
-    totalPrice: 400, // Daily rate calculation
-    status: 'cancelled',
+    subscriptionType: 'monthly',
+    subscribedDate: '2025-08-01',
+    nextBillingDate: '2025-09-01',
+    totalPrice: 800,
+    basePrice: 750,
+    additionalFacilities: 50,
+    status: 'confirmed',
+    location: 'main-branch',
+    locationName: 'Main Branch',
+    companyName: 'Premium Co-working Ltd.',
+    capacity: 1,
+    facilities: ['WiFi', 'Private Storage', 'Ergonomic Chair', 'Desk Lamp', 'Personal Phone Line']
+  },
+  {
+    id: 'SUB-3003',
+    productName: 'Dedicated Desk',
+    productType: 'Subscription',
+    productId: 'SUB003',
+    productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
+    customerName: 'Sarah Wilson',
+    userType: 'registered',
+    subscriptionType: 'annually',
+    subscribedDate: '2025-01-01',
+    nextBillingDate: '2026-01-01',
+    totalPrice: 8000,
+    basePrice: 7500,
+    additionalFacilities: 500,
+    status: 'confirmed',
     location: 'business-center',
     locationName: 'Business Center',
-    companyName: 'Global Solutions Inc.'
+    companyName: 'Global Solutions Inc.',
+    capacity: 1,
+    facilities: ['WiFi', 'Private Storage', 'Ergonomic Chair', 'Desk Lamp', 'Personal Phone Line', '24/7 Access']
+  },
+  {
+    id: 'SUB-3004',
+    productName: 'Dedicated Desk',
+    productType: 'Subscription',
+    productId: 'SUB001',
+    productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
+    customerName: 'Michael Brown',
+    userType: 'guest',
+    subscriptionType: 'monthly',
+    subscribedDate: '2025-07-15',
+    nextBillingDate: '2025-08-15',
+    totalPrice: 850,
+    basePrice: 800,
+    additionalFacilities: 50,
+    status: 'cancelled',
+    location: 'main-branch',
+    locationName: 'Main Branch',
+    companyName: 'Premium Co-working Ltd.',
+    capacity: 1,
+    facilities: ['WiFi', 'Private Storage', 'Ergonomic Chair', 'Desk Lamp']
   }
 ])
 
@@ -1002,19 +763,38 @@ const filteredBookings = computed(() => {
 
   // Filter by tab
   if (activeTab.value === 'bookings') {
-    bookings = bookings.filter(b => b.status === 'confirmed')
+    bookings = bookings.filter(b => b.status === 'confirmed' && b.productType !== 'Subscription')
+  } else if (activeTab.value === 'subscriptions') {
+    bookings = bookings.filter(b => b.productType === 'Subscription')
   } else {
-    bookings = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled')
+    bookings = bookings.filter(b => (b.status === 'completed' || b.status === 'cancelled') && b.productType !== 'Subscription')
   }
 
   // Apply date range filter
   if (filters.value.startDate && filters.value.endDate) {
     bookings = bookings.filter(b => {
-      const bookingDate = b.date
-      return bookingDate >= filters.value.startDate && bookingDate <= filters.value.endDate
+      const bookingDate = b.date || b.subscribedDate
+      if (!bookingDate) return false
+      
+      // Ensure date comparison works correctly
+      const bookingDateStr = bookingDate.toString()
+      const startDateStr = filters.value.startDate.toString()
+      const endDateStr = filters.value.endDate.toString()
+      
+      return bookingDateStr >= startDateStr && bookingDateStr <= endDateStr
     })
   } else if (filters.value.startDate) {
-    bookings = bookings.filter(b => b.date >= filters.value.startDate)
+    // Single date filter - show only bookings on the exact selected date
+    bookings = bookings.filter(b => {
+      const bookingDate = b.date || b.subscribedDate
+      if (!bookingDate) return false
+      
+      const bookingDateStr = bookingDate.toString()
+      const startDateStr = filters.value.startDate.toString()
+      
+      // For single date selection, match exactly
+      return bookingDateStr === startDateStr
+    })
   }
 
   // Apply other filters
@@ -1022,7 +802,10 @@ const filteredBookings = computed(() => {
     bookings = bookings.filter(b => b.location === filters.value.location)
   }
   if (filters.value.productType) {
-    bookings = bookings.filter(b => b.productType.toLowerCase().replace(' ', '-') === filters.value.productType)
+    bookings = bookings.filter(b => b.productType === filters.value.productType)
+  }
+  if (filters.value.subscriptionType) {
+    bookings = bookings.filter(b => b.subscriptionType === filters.value.subscriptionType)
   }
   if (filters.value.userType) {
     bookings = bookings.filter(b => b.userType === filters.value.userType)
@@ -1075,12 +858,15 @@ const viewBookingDetails = (booking: any) => {
       customerName: booking.customerName,
       productName: booking.productName,
       status: booking.status,
-      date: booking.date
+      date: booking.date || booking.subscribedDate
     }
   })
   localStorage.setItem('bookingViewLogs', JSON.stringify(viewLogs))
   
-  // Return the route path for navigation
+  // Return the appropriate route path for navigation
+  if (booking.productType === 'Subscription') {
+    return `/subscriptions/${booking.id}`
+  }
   return `/bookings/${booking.id}`
 }
 
@@ -1091,16 +877,16 @@ const getAllBookingDetails = () => {
   return allBookings.value.map(booking => ({
     ...booking,
     // Add computed fields for better detail view
-    formattedDate: new Date(booking.date).toLocaleDateString('en-US', { 
+    formattedDate: booking.date ? new Date(booking.date).toLocaleDateString('en-US', { 
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
-    }),
+    }) : 'N/A',
     timeSlot: `${booking.startTime} - ${booking.endTime}`,
     statusColor: getStatusClass(booking.status),
-    isUpcoming: booking.status === 'confirmed' && new Date(booking.date) > new Date(),
-    isPast: booking.status === 'completed' || booking.status === 'cancelled' || new Date(booking.date) < new Date()
+    isUpcoming: booking.status === 'confirmed' && booking.date && new Date(booking.date) > new Date(),
+    isPast: booking.status === 'completed' || booking.status === 'cancelled' || (booking.date && new Date(booking.date) < new Date())
   }))
 }
 
@@ -1115,17 +901,17 @@ const getBookingById = (bookingId: string) => {
   // Return booking with enhanced details
   return {
     ...booking,
-    formattedDate: new Date(booking.date).toLocaleDateString('en-US', { 
+    formattedDate: booking.date ? new Date(booking.date).toLocaleDateString('en-US', { 
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
-    }),
+    }) : 'N/A',
     timeSlot: `${booking.startTime} - ${booking.endTime}`,
     statusColor: getStatusClass(booking.status),
-    isUpcoming: booking.status === 'confirmed' && new Date(booking.date) > new Date(),
-    isPast: booking.status === 'completed' || booking.status === 'cancelled' || new Date(booking.date) < new Date(),
-    canBeCancelled: booking.status === 'confirmed' && new Date(booking.date) > new Date(),
+    isUpcoming: booking.status === 'confirmed' && booking.date && new Date(booking.date) > new Date(),
+    isPast: booking.status === 'completed' || booking.status === 'cancelled' || (booking.date && new Date(booking.date) < new Date()),
+    canBeCancelled: booking.status === 'confirmed' && booking.date && new Date(booking.date) > new Date(),
     canBeDeleted: booking.status === 'completed' || booking.status === 'cancelled'
   }
 }
@@ -1169,9 +955,11 @@ const addNewBooking = (newBookingData: any) => {
 // Methods
 const getTabCount = (tabId: string) => {
   if (tabId === 'bookings') {
-    return allBookings.value.filter(b => b.status === 'confirmed').length
+    return allBookings.value.filter(b => b.status === 'confirmed' && b.productType !== 'Subscription').length
+  } else if (tabId === 'subscriptions') {
+    return allBookings.value.filter(b => b.productType === 'Subscription').length
   } else {
-    return allBookings.value.filter(b => b.status === 'completed' || b.status === 'cancelled').length
+    return allBookings.value.filter(b => (b.status === 'completed' || b.status === 'cancelled') && b.productType !== 'Subscription').length
   }
 }
 
@@ -1199,7 +987,8 @@ const resetFilters = () => {
     endDate: '',
     location: '',
     productType: '',
-    userType: ''
+    userType: '',
+    subscriptionType: ''
   }
   currentPage.value = 1
 }
@@ -1224,6 +1013,7 @@ const previousPage = () => {
 const clearDateRange = () => {
   filters.value.startDate = ''
   filters.value.endDate = ''
+  currentPage.value = 1
 }
 
 // Calendar methods
@@ -1255,6 +1045,9 @@ const selectDate = (date: any) => {
       filters.value.startDate = selectedDate
     }
   }
+  
+  // Reset pagination when filter changes
+  currentPage.value = 1
 }
 
 const isDateSelected = (date: any) => {
@@ -1280,135 +1073,6 @@ const closeDeleteModal = () => {
   showDeleteModal.value = false
   bookingToDelete.value = null
   isDeleting.value = false
-}
-
-// Cancel booking functions
-const confirmCancelBooking = (booking: any) => {
-  bookingToCancel.value = booking
-  
-  // Pre-populate customer contact information (in a real app, this would come from customer database)
-  cancellationReason.value = {
-    selectedReason: '',
-    customMessage: '',
-    sendViaEmail: true,
-    sendViaSMS: false,
-    customerEmail: `${booking.customerName.toLowerCase().replace(' ', '.')}@example.com`, // Mock email
-    customerPhone: '+1 (555) ' + Math.floor(Math.random() * 900 + 100) + '-' + Math.floor(Math.random() * 9000 + 1000) // Mock phone
-  }
-  
-  showCancelModal.value = true
-}
-
-const closeCancelModal = () => {
-  showCancelModal.value = false
-  bookingToCancel.value = null
-  isCancelling.value = false
-  resetRefundForm()
-}
-
-const cancelBooking = async () => {
-  if (!bookingToCancel.value) return
-  
-  isCancelling.value = true
-  
-  try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Update booking status to cancelled
-    const booking = allBookings.value.find(b => b.id === bookingToCancel.value.id)
-    if (booking) {
-      booking.status = 'cancelled'
-    }
-    
-    // Save to localStorage for persistence
-    const bookingStatuses = JSON.parse(localStorage.getItem('bookingStatuses') || '{}')
-    bookingStatuses[bookingToCancel.value.id] = 'cancelled'
-    localStorage.setItem('bookingStatuses', JSON.stringify(bookingStatuses))
-    
-    // Send customer notifications with cancellation reason if configured
-    const notificationResults = await sendCancellationNotifications()
-    
-    // Log the cancellation with refund information and reason
-    const cancelledBookings = JSON.parse(localStorage.getItem('cancelledBookings') || '[]')
-    const cancellationData = {
-      ...bookingToCancel.value,
-      cancelledAt: new Date().toISOString(),
-      cancelledBy: 'Admin', // In real app, get from auth context
-      cancellationReason: {
-        reason: cancellationReason.value.selectedReason,
-        customMessage: cancellationReason.value.customMessage,
-        reasonSentToCustomer: cancellationReason.value.sendViaEmail || cancellationReason.value.sendViaSMS
-      },
-      notifications: notificationResults,
-      refundData: refundOptions.value.isRefundApplicable ? {
-        refundAmount: refundOptions.value.refundAmount,
-        processingMethod: refundOptions.value.processingMethod,
-        adminNotes: refundOptions.value.adminNotes,
-        hasPaymentSlip: uploadedFile.value ? true : false,
-        paymentSlipName: uploadedFile.value?.name || null,
-        refundProcessedAt: new Date().toISOString()
-      } : null
-    }
-    
-    cancelledBookings.push(cancellationData)
-    localStorage.setItem('cancelledBookings', JSON.stringify(cancelledBookings))
-    
-    // If refund is applicable, process the refund
-    if (refundOptions.value.isRefundApplicable && refundOptions.value.refundAmount > 0) {
-      console.log('Processing refund:', {
-        bookingId: bookingToCancel.value.id,
-        amount: refundOptions.value.refundAmount,
-        method: refundOptions.value.processingMethod,
-        paymentSlip: uploadedFile.value?.name
-      })
-      
-      // In a real application, this would call the payment gateway's refund API
-      // For now, we'll just log it and store the refund details
-      const refunds = JSON.parse(localStorage.getItem('refunds') || '[]')
-      refunds.push({
-        id: Date.now().toString(),
-        bookingId: bookingToCancel.value.id,
-        customerId: bookingToCancel.value.customerId,
-        customerName: bookingToCancel.value.customerName,
-        amount: refundOptions.value.refundAmount,
-        processingMethod: refundOptions.value.processingMethod,
-        adminNotes: refundOptions.value.adminNotes,
-        paymentSlipUploaded: uploadedFile.value ? true : false,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        processedBy: 'Admin'
-      })
-      localStorage.setItem('refunds', JSON.stringify(refunds))
-    }
-    
-    closeCancelModal()
-    
-    // Show success message with notification and refund details
-    const notificationSummary = []
-    if (notificationResults.email?.success) notificationSummary.push('email')
-    if (notificationResults.sms?.success) notificationSummary.push('SMS')
-    
-    const refundMessage = refundOptions.value.isRefundApplicable && refundOptions.value.refundAmount > 0 
-      ? ` with $${refundOptions.value.refundAmount} refund via ${refundOptions.value.processingMethod}` 
-      : ''
-      
-    const notificationMessage = notificationSummary.length > 0 
-      ? `. Customer notified about cancellation reason via ${notificationSummary.join(' and ')}.`
-      : '. No customer notification sent.'
-    
-    const message = `Booking cancelled successfully: ${bookingToCancel.value.id}${refundMessage}${notificationMessage}`
-    console.log(message)
-    
-    // In a real application, you would show a toast notification here
-    alert(message)
-    
-  } catch (error) {
-    console.error('Error cancelling booking:', error)
-    // Handle error (show toast notification, etc.)
-  } finally {
-    isCancelling.value = false
-  }
 }
 
 const deleteBooking = async () => {
@@ -1451,291 +1115,6 @@ const deleteBooking = async () => {
   }
 }
 
-// File upload methods for refund processing
-const triggerFileInput = () => {
-  fileInput.value?.click()
-}
-
-const handleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (file && validateFile(file)) {
-    uploadedFile.value = file
-  }
-}
-
-const handleFileDrop = (event: DragEvent) => {
-  event.preventDefault()
-  isDragging.value = false
-  
-  const files = event.dataTransfer?.files
-  const file = files?.[0]
-  
-  if (file && validateFile(file)) {
-    uploadedFile.value = file
-    simulateFileUpload()
-  }
-}
-
-const validateFile = (file: File): boolean => {
-  const maxSize = 5 * 1024 * 1024 // 5MB
-  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
-  
-  if (file.size > maxSize) {
-    alert('File size must be less than 5MB')
-    return false
-  }
-  
-  if (!allowedTypes.includes(file.type)) {
-    alert('Only PNG, JPG, and PDF files are allowed')
-    return false
-  }
-  
-  return true
-}
-
-const simulateFileUpload = () => {
-  uploadProgress.value = 0
-  const interval = setInterval(() => {
-    uploadProgress.value += 10
-    if (uploadProgress.value >= 100) {
-      clearInterval(interval)
-      setTimeout(() => {
-        uploadProgress.value = 0
-      }, 1000)
-    }
-  }, 100)
-}
-
-const removeFile = () => {
-  uploadedFile.value = null
-  uploadProgress.value = 0
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
-}
-
-const resetRefundForm = () => {
-  refundOptions.value = {
-    isRefundApplicable: false,
-    refundAmount: 0,
-    processingMethod: 'original-payment',
-    adminNotes: ''
-  }
-  uploadedFile.value = null
-  uploadProgress.value = 0
-  isDragging.value = false
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
-  
-  // Reset cancellation reason
-  cancellationReason.value = {
-    selectedReason: '',
-    customMessage: '',
-    sendViaEmail: true,
-    sendViaSMS: false,
-    customerEmail: '',
-    customerPhone: ''
-  }
-}
-
-// Customer notification functions for cancellation reasons
-const sendCancellationNotifications = async () => {
-  const results: any = {}
-  
-  // Only send notifications if a reason is selected and customer wants notifications
-  if (!cancellationReason.value.selectedReason) {
-    return results
-  }
-  
-  // Send email notification with reason
-  if (cancellationReason.value.sendViaEmail && cancellationReason.value.customerEmail) {
-    try {
-      results.email = await sendCancellationEmailNotification()
-    } catch (error) {
-      console.error('Failed to send cancellation email notification:', error)
-      results.email = { success: false, error: String(error) }
-    }
-  }
-  
-  // Send SMS notification with reason
-  if (cancellationReason.value.sendViaSMS && cancellationReason.value.customerPhone) {
-    try {
-      results.sms = await sendCancellationSMSNotification()
-    } catch (error) {
-      console.error('Failed to send cancellation SMS notification:', error)
-      results.sms = { success: false, error: String(error) }
-    }
-  }
-  
-  return results
-}
-
-const sendCancellationEmailNotification = async () => {
-  // Simulate email API call
-  const emailData = {
-    to: cancellationReason.value.customerEmail,
-    subject: `Booking Cancellation Notice - ${bookingToCancel.value?.id}`,
-    html: generateCancellationEmailHTML(),
-    from: 'noreply@coworking.com'
-  }
-  
-  console.log('Sending cancellation email notification:', emailData)
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800))
-  
-  return {
-    success: true,
-    messageId: `cancel_email_${Date.now()}`,
-    sentAt: new Date().toISOString(),
-    recipient: emailData.to,
-    reason: cancellationReason.value.selectedReason
-  }
-}
-
-const sendCancellationSMSNotification = async () => {
-  // Simulate SMS API call
-  const smsData = {
-    to: cancellationReason.value.customerPhone,
-    message: generateCancellationSMSMessage(),
-    from: '+1-555-COWORK'
-  }
-  
-  console.log('Sending cancellation SMS notification:', smsData)
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 600))
-  
-  return {
-    success: true,
-    messageId: `cancel_sms_${Date.now()}`,
-    sentAt: new Date().toISOString(),
-    recipient: smsData.to,
-    reason: cancellationReason.value.selectedReason
-  }
-}
-
-const generateCancellationEmailHTML = () => {
-  const booking = bookingToCancel.value
-  const reason = cancellationReason.value
-  
-  const reasonTexts: { [key: string]: string } = {
-    'facility-maintenance': 'Due to scheduled facility maintenance and repairs',
-    'equipment-failure': 'Due to unexpected equipment failure',
-    'overbooking': 'Due to an overbooking situation',
-    'emergency-closure': 'Due to emergency closure',
-    'policy-violation': 'Due to policy violation',
-    'payment-issue': 'Due to payment processing issues',
-    'staff-shortage': 'Due to staff shortage',
-    'weather-conditions': 'Due to severe weather conditions',
-    'customer-request': 'As per your request',
-    'other': 'Due to unforeseen circumstances'
-  }
-  
-  const reasonText = reasonTexts[reason.selectedReason] || 'Due to unforeseen circumstances'
-  const refundText = refundOptions.value.isRefundApplicable 
-    ? `<p><strong>Refund Information:</strong> A refund of $${refundOptions.value.refundAmount} will be processed via ${refundOptions.value.processingMethod} within 3-5 business days.</p>`
-    : ''
-  
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Booking Cancellation Notice</title>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .booking-details { background: #fff; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px; margin: 20px 0; }
-        .reason-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0; }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #6c757d; font-size: 14px; }
-        .alert { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin: 20px 0; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h2>Booking Cancellation Notice</h2>
-        </div>
-        
-        <div class="alert">
-          <strong>Your booking has been cancelled</strong>
-        </div>
-        
-        <p>Dear ${booking?.customerName},</p>
-        
-        <p>We regret to inform you that your booking has been cancelled ${reasonText}.</p>
-        
-        <div class="reason-box">
-          <h3>Cancellation Reason:</h3>
-          <p><strong>${reason.selectedReason.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</strong></p>
-          ${reason.customMessage ? `<p>${reason.customMessage}</p>` : ''}
-        </div>
-        
-        <div class="booking-details">
-          <h3>Cancelled Booking Details:</h3>
-          <ul style="list-style: none; padding: 0;">
-            <li><strong>Booking ID:</strong> ${booking?.id}</li>
-            <li><strong>Product:</strong> ${booking?.productName}</li>
-            <li><strong>Date:</strong> ${booking?.date}</li>
-            <li><strong>Time:</strong> ${booking?.startTime} - ${booking?.endTime}</li>
-            <li><strong>Location:</strong> ${booking?.locationName}</li>
-            <li><strong>Amount:</strong> $${booking?.totalPrice}</li>
-          </ul>
-        </div>
-        
-        ${refundText}
-        
-        <p>We sincerely apologize for any inconvenience this may cause. If you have any questions or would like to make a new booking, please don't hesitate to contact us.</p>
-        
-        <div class="footer">
-          <p>Thank you for your understanding,<br>
-          CoWorking Space Team<br>
-          Email: support@coworking.com<br>
-          Phone: +1 (555) 123-WORK</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `
-}
-
-const generateCancellationSMSMessage = () => {
-  const booking = bookingToCancel.value
-  const reason = cancellationReason.value
-  
-  const reasonTexts: { [key: string]: string } = {
-    'facility-maintenance': 'due to facility maintenance',
-    'equipment-failure': 'due to equipment failure',
-    'overbooking': 'due to overbooking',
-    'emergency-closure': 'due to emergency closure',
-    'policy-violation': 'due to policy violation',
-    'payment-issue': 'due to payment issue',
-    'staff-shortage': 'due to staff shortage',
-    'weather-conditions': 'due to weather conditions',
-    'customer-request': 'as requested',
-    'other': 'due to unforeseen circumstances'
-  }
-  
-  const reasonText = reasonTexts[reason.selectedReason] || 'due to unforeseen circumstances'
-  let message = `Hi ${booking?.customerName}, your booking ${booking?.id} for ${booking?.productName} on ${booking?.date} has been cancelled ${reasonText}.`
-  
-  if (refundOptions.value.isRefundApplicable && refundOptions.value.refundAmount > 0) {
-    message += ` Refund of $${refundOptions.value.refundAmount} will be processed within 3-5 days.`
-  }
-  
-  if (reason.customMessage && reason.customMessage.length < 50) {
-    message += ` ${reason.customMessage}`
-  }
-  
-  message += ` For questions, call +1-555-123-WORK. We apologize for the inconvenience. -CoWorking Space`
-  
-  return message
-}
-
 // Click outside handler
 const handleClickOutside = (event: MouseEvent) => {
   const target = event.target as HTMLElement
@@ -1776,6 +1155,11 @@ onMounted(() => {
   console.log('BookingsView mounted with', allBookings.value.length, 'total bookings')
 })
 
+// Watch for filter changes to reset pagination
+watch([() => filters.value, activeTab], () => {
+  currentPage.value = 1
+}, { deep: true })
+
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
@@ -1790,7 +1174,6 @@ defineExpose({
   // Expose filtered bookings for external components
   getCurrentBookings: () => filteredBookings.value,
   // Expose booking management functions
-  confirmCancelBooking,
   confirmDeleteBooking
 })
 </script>

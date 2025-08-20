@@ -17,7 +17,7 @@
             </svg>
             <input
               type="text"
-              placeholder="Search by booking ID or customer email..."
+              placeholder="Search by booking ID, name, or email..."
               v-model="searchQuery"
               @input="handleSearchInput"
               @focus="showSearchResults = true"
@@ -64,111 +64,74 @@
       </div>
 
       <!-- Stats Widgets -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <!-- Today's Bookings -->
-        <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl shadow-card p-6 hover:shadow-card-hover transition-shadow">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiCalendarCheck" />
-                </svg>
-              </div>
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl shadow-card p-4 hover:shadow-card-hover transition-shadow">
+          <div class="text-center">
+            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path :d="mdiCalendarCheck" />
+              </svg>
             </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-blue-600">Today's Bookings</h3>
-              <p class="text-2xl font-bold text-blue-900">{{ stats.todayBookings }}</p>
-              <p class="text-xs text-green-600 flex items-center">
-                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiTrendingUp" />
-                </svg>
-                +8% from yesterday
-              </p>
-            </div>
+            <h3 class="text-xs font-medium text-blue-600 mb-1">Today's Bookings</h3>
+            <p class="text-xl font-bold text-blue-900 mb-1">{{ stats.todayBookings }}</p>
+            <p class="text-xs text-blue-700">{{ stats.todayBookings }} new bookings today</p>
           </div>
         </div>
 
         <!-- Upcoming Bookings -->
-        <div class="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl shadow-card p-6 hover:shadow-card-hover transition-shadow">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiCalendarClock" />
-                </svg>
-              </div>
+        <div class="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-xl shadow-card p-4 hover:shadow-card-hover transition-shadow">
+          <div class="text-center">
+            <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path :d="mdiCalendarClock" />
+              </svg>
             </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-purple-600">Upcoming Bookings</h3>
-              <p class="text-2xl font-bold text-purple-900">{{ stats.upcomingBookings }}</p>
-              <p class="text-xs text-purple-500">Next 7 days</p>
-            </div>
+            <h3 class="text-xs font-medium text-purple-600 mb-1">Upcoming Bookings</h3>
+            <p class="text-xl font-bold text-purple-900 mb-1">{{ stats.upcomingBookings }}</p>
+            <p class="text-xs text-purple-700">{{ stats.upcomingBookings }} bookings for the next 7 days</p>
           </div>
         </div>
 
         <!-- PayMedia Commission -->
-        <div class="bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl shadow-card p-6 hover:shadow-card-hover transition-shadow">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiCashMultiple" />
-                </svg>
-              </div>
+        <div class="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-xl shadow-card p-4 hover:shadow-card-hover transition-shadow">
+          <div class="text-center">
+            <div class="w-10 h-10 bg-teal-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path :d="mdiCashMultiple" />
+              </svg>
             </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-indigo-600">PayMedia Commission</h3>
-              <p class="text-2xl font-bold text-indigo-900">${{ stats.payMediaCommission.toLocaleString() }}</p>
-              <p class="text-xs text-indigo-500 flex items-center">
-                <span :class="stats.payMediaTrend >= 0 ? 'text-green-600' : 'text-red-600'" class="flex items-center">
-                  <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path :d="stats.payMediaTrend >= 0 ? mdiTrendingUp : mdiTrendingDown" />
-                  </svg>
-                  {{ stats.payMediaTrend >= 0 ? '+' : '' }}{{ stats.payMediaTrend }}% this month
-                </span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cancellations -->
-        <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl shadow-card p-6 hover:shadow-card-hover transition-shadow">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiCancel" />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-orange-600">Cancellations</h3>
-              <p class="text-2xl font-bold text-orange-900">{{ stats.cancellations }}</p>
-              <p class="text-xs text-orange-500">Today</p>
-            </div>
+            <h3 class="text-xs font-medium text-teal-600 mb-1">PayMedia Commission</h3>
+            <p class="text-xl font-bold text-teal-900 mb-1">${{ stats.payMediaCommission.toLocaleString() }}</p>
+            <p class="text-xs text-teal-700">{{ stats.payMediaPeriod }}</p>
           </div>
         </div>
 
         <!-- Total Revenue Today -->
-        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl shadow-card p-6 hover:shadow-card-hover transition-shadow">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiCurrencyUsd" />
-                </svg>
-              </div>
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl shadow-card p-4 hover:shadow-card-hover transition-shadow">
+          <div class="text-center">
+            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path :d="mdiCurrencyUsd" />
+              </svg>
             </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-green-600">Total Revenue Today</h3>
-              <p class="text-2xl font-bold text-green-900">${{ stats.todayRevenue.toLocaleString() }}</p>
-              <p class="text-xs text-green-600 flex items-center">
-                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiTrendingUp" />
-                </svg>
-                +12% from yesterday
-              </p>
+            <h3 class="text-xs font-medium text-green-600 mb-1">Total Revenue Today</h3>
+            <p class="text-xl font-bold text-green-900 mb-1">${{ stats.todayRevenue.toLocaleString() }}</p>
+            <p class="text-xs text-green-700">Revenue earned today</p>
+          </div>
+        </div>
+
+        <!-- Cancellations -->
+        <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl shadow-card p-4 hover:shadow-card-hover transition-shadow">
+          <div class="text-center">
+            <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path :d="mdiCancel" />
+              </svg>
             </div>
+            <h3 class="text-xs font-medium text-orange-600 mb-1">Cancellations</h3>
+            <p class="text-xl font-bold text-orange-900 mb-1">{{ stats.cancellations }}</p>
+            <p class="text-xs text-orange-700">{{ stats.cancellations }} cancelled today</p>
           </div>
         </div>
       </div>
@@ -268,7 +231,6 @@ import {
   mdiCancel,
   mdiCurrencyUsd,
   mdiTrendingUp,
-  mdiTrendingDown,
   mdiCashMultiple,
   mdiOfficeBuilding,
   mdiCalendarPlus,
@@ -397,7 +359,7 @@ const stats = ref({
   cancellations: 2,
   todayRevenue: 1250,
   payMediaCommission: 875,
-  payMediaTrend: 15.2
+  payMediaPeriod: 'This week: $875 | This month: $3,420'
 })
 
 // Recent bookings data

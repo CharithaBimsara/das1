@@ -1091,7 +1091,7 @@ const deleteBooking = async () => {
     }
     
     // Save to localStorage for persistence
-    localStorage.setItem('bookings', JSON.stringify(allBookings.value))
+  localStorage.setItem('allBookings', JSON.stringify(allBookings.value))
     
     // Log the deletion
     const deletedBookings = JSON.parse(localStorage.getItem('deletedBookings') || '[]')
@@ -1141,6 +1141,17 @@ onMounted(() => {
       }
     } catch (error) {
       console.warn('Error loading bookings from localStorage:', error)
+    }
+  }
+  
+  // If there are no bookings in localStorage yet, persist the initial sample data so
+  // other views (like CancelBookingView) can load the 'actual' data by ID.
+  if (!savedBookings) {
+    try {
+      localStorage.setItem('allBookings', JSON.stringify(allBookings.value))
+      console.log('Seeded initial sample bookings to localStorage:', allBookings.value.length)
+    } catch (err) {
+      console.warn('Failed to seed bookings to localStorage:', err)
     }
   }
   

@@ -402,10 +402,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { mdiArrowLeft, mdiCancel, mdiInformationOutline, mdiAlertCircle, mdiCheckCircle, mdiFileDocument, mdiDelete } from '@mdi/js'
+import { useBookings } from '@/composables/useBookings'
 
 // Router
 const route = useRoute()
 const router = useRouter()
+
+// Bookings composable (single source of truth)
+const { getBookingById, updateBookingStatus, initializeBookings } = useBookings()
 
 // State
 const loading = ref(true)
@@ -465,101 +469,40 @@ const loadBookingDetails = async () => {
   try {
     loading.value = true
     error.value = ''
-    
+
+    // Ensure composable has initialized data
+    initializeBookings()
+
     const bookingId = route.params.id as string
-    
-    // Simulate API call to fetch booking details
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Load from localStorage or sample data
-    const allBookings = JSON.parse(localStorage.getItem('allBookings') || '[]')
-    const foundBooking = allBookings.find((b: any) => b.id === bookingId)
-    
-    if (!foundBooking) {
-      // Fallback sample data for both bookings and subscriptions
-      const sampleBookings = [
-        {
-          id: 'BR-2034',
-          productName: 'Meeting Room',
-          productType: 'Meeting Room',
-          productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop&crop=center',
-          customerName: 'John Doe',
-          date: '2025-08-20',
-          startTime: '10:00 AM',
-          endTime: '12:00 PM',
-          duration: '2 hours',
-          totalPrice: 100,
-          status: 'confirmed',
-          locationName: 'Main Branch',
-          formattedDate: 'Tuesday, August 20, 2025',
-          timeSlot: '10:00 AM - 12:00 PM'
-        },
-        // Sample subscription data
-        {
-          id: 'SUB-3001',
-          productName: 'Dedicated Desk',
-          productType: 'Subscription',
-          productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
-          customerName: 'John Doe',
-          subscriptionType: 'monthly',
-          subscribedDate: '2025-08-01',
-          nextBillingDate: '2025-09-01',
-          totalPrice: 800,
-          status: 'confirmed',
-          locationName: 'Main Branch'
-        },
-        {
-          id: 'SUB-3003',
-          productName: 'Dedicated Desk',
-          productType: 'Subscription',
-          productImage: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=100&h=100&fit=crop&crop=center',
-          customerName: 'Sarah Wilson',
-          subscriptionType: 'annually',
-          subscribedDate: '2025-01-01',
-          nextBillingDate: '2026-01-01',
-          totalPrice: 8000,
-          status: 'confirmed',
-          locationName: 'Business Center'
-        }
-      ]
-      const sampleBooking = sampleBookings.find((b: any) => b.id === bookingId)
-      
-      if (sampleBooking) {
-        booking.value = sampleBooking
-        // Populate customer information automatically for sample data
-        customerInfo.value = {
-          email: `${sampleBooking.customerName.toLowerCase().replace(' ', '.')}@example.com`,
-          mobile: '+1 (555) 123-4567'
-        }
-      } else {
-        error.value = `${isSubscription.value ? 'Subscription' : 'Booking'} with ID ${bookingId} not found.`
-        return
-      }
-    } else {
-      booking.value = {
-        ...foundBooking,
-        formattedDate: foundBooking.date ? new Date(foundBooking.date).toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        }) : 'N/A',
-        timeSlot: foundBooking.startTime && foundBooking.endTime ? `${foundBooking.startTime} - ${foundBooking.endTime}` : 'N/A'
-      }
+
+    // Use composable to get booking by id (no hard-coded localStorage logic here)
+    const found = getBookingById(bookingId)
+    if (!found) {
+      error.value = `${isSubscription.value ? 'Subscription' : 'Booking'} with ID ${bookingId} not found.`
+      return
     }
-    
+
+    // Normalize booking for display
+    booking.value = {
+      ...found,
+      formattedDate: found.date ? new Date(found.date).toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      }) : found.subscribedDate || 'N/A',
+      timeSlot: found.startTime && found.endTime ? `${found.startTime} - ${found.endTime}` : found.duration || 'N/A'
+    }
+
     // Populate customer information automatically
     customerInfo.value = {
-      email: `${booking.value.customerName.toLowerCase().replace(' ', '.')}@example.com`,
-      mobile: '+1 (555) 123-4567'
+      email: booking.value.customerEmail || `${booking.value.customerName?.toLowerCase().replace(' ', '.')}@example.com`,
+      mobile: booking.value.customerPhone || '+1 (555) 000-0000'
     }
-    
+
     // Check if booking/subscription can be cancelled
     if (booking.value.status !== 'confirmed') {
       error.value = `Only confirmed ${isSubscription.value ? 'subscriptions' : 'bookings'} can be cancelled.`
       return
     }
-    
+
   } catch (err) {
     console.error('Error loading booking:', err)
     error.value = `An error occurred while loading the ${isSubscription.value ? 'subscription' : 'booking'} details.`
@@ -576,25 +519,22 @@ const submitCancellation = () => {
 const confirmCancellation = async () => {
   try {
     isCancelling.value = true
-    
-    // Simulate API call to cancel booking
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1200))
+
+    // Use composable to update booking status (single source of truth)
+    if (booking.value && booking.value.id) {
+      updateBookingStatus(booking.value.id, 'cancelled')
+    }
+
     // Generate cancellation result
     cancellationResult.value = {
       cancellationId: `CANCEL-${Date.now()}`,
       paymentSlipSent: cancellationForm.value.sendPaymentSlip,
       paymentSlipFileName: paymentSlipFile.value?.name || null
     }
-    
-    // Update booking status in storage
-    const allBookings = JSON.parse(localStorage.getItem('allBookings') || '[]')
-    const bookingIndex = allBookings.findIndex((b: any) => b.id === booking.value.id)
-    if (bookingIndex > -1) {
-      allBookings[bookingIndex].status = 'cancelled'
-      localStorage.setItem('allBookings', JSON.stringify(allBookings))
-    }
-    
+
     // Log cancellation
     const cancellationLogs = JSON.parse(localStorage.getItem('cancellationLogs') || '[]')
     cancellationLogs.push({
@@ -610,17 +550,16 @@ const confirmCancellation = async () => {
       customerMobile: customerInfo.value.mobile
     })
     localStorage.setItem('cancellationLogs', JSON.stringify(cancellationLogs))
-    
-    // Update booking status
-    booking.value.status = 'cancelled'
-    
+
+    // Update booking status in local view
+    if (booking.value) booking.value.status = 'cancelled'
+
     // Close confirm modal and show success modal
     showConfirmModal.value = false
     showSuccessModal.value = true
-    
+
   } catch (err) {
     console.error('Error cancelling booking:', err)
-    // Handle error
   } finally {
     isCancelling.value = false
   }

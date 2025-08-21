@@ -12,6 +12,7 @@ import BookingsView from '@/views/bookings/BookingsView.vue'
 import BookingDetailView from '@/views/bookings/BookingDetailView.vue'
 import SubscriptionDetailView from '@/views/bookings/SubscriptionDetailView.vue'
 import CancelBookingView from '@/views/bookings/CancelBookingView.vue'
+import CancelSubscriptionView from '@/views/bookings/CancelSubscriptionView.vue'
 
 
 
@@ -105,7 +106,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/subscriptions/:id/cancel',
     name: 'CancelSubscription',
-    component: CancelBookingView,
+    component: CancelSubscriptionView,
     meta: { requiresAuth: true }
   },
   {

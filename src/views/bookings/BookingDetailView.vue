@@ -3,11 +3,11 @@
     <div class="space-y-6" v-if="booking">
       <!-- Back Button -->
       <div class="flex items-center">
-        <router-link to="/bookings" class="flex items-center text-gray-600 hover:text-gray-900">
+        <router-link :to="getBackNavigationPath()" class="flex items-center text-gray-600 hover:text-gray-900">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Bookings
+          {{ getBackNavigationLabel() }}
         </router-link>
       </div>
 
@@ -255,11 +255,11 @@
         </svg>
         <h3 class="text-lg font-medium text-gray-900 mb-2">Booking Not Found</h3>
         <p class="text-gray-600 mb-4">The booking with ID "{{ route.params.id }}" could not be found.</p>
-        <router-link to="/bookings" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+        <router-link :to="getBackNavigationPath()" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Bookings
+          {{ getBackNavigationLabel() }}
         </router-link>
       </div>
     </div>
@@ -1167,6 +1167,63 @@ const sendMessage = async () => {
   } finally {
     isSendingMessage.value = false
   }
+}
+
+// Navigation methods for determining correct back button destination
+const isHistoricalBooking = (booking: any) => {
+  if (!booking) return false
+  
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]
+  
+  // Check if booking is historical based on BookingsView logic
+  // 1. Cancelled subscriptions
+  if (booking.productType === 'Subscription' && booking.status === 'cancelled') {
+    return true
+  }
+  
+  // 2. Completed or cancelled regular bookings
+  if (booking.productType !== 'Subscription' && (booking.status === 'completed' || booking.status === 'cancelled')) {
+    return true
+  }
+  
+  // 3. Past confirmed bookings (confirmed bookings before today)
+  if (booking.status === 'confirmed' && booking.productType !== 'Subscription' && booking.date && booking.date < todayStr) {
+    return true
+  }
+  
+  return false
+}
+
+const getBackNavigationPath = () => {
+  // Check if current booking is historical
+  if (booking.value && isHistoricalBooking(booking.value)) {
+    return '/bookings?tab=history'
+  }
+  
+  // Check if it's a subscription
+  if (booking.value && booking.value.productType === 'Subscription') {
+    return '/bookings?tab=subscriptions'
+  }
+  
+  // Default to bookings tab for active/confirmed bookings
+  return '/bookings'
+}
+
+const getBackNavigationLabel = () => {
+  // Check if current booking is historical
+  if (booking.value && isHistoricalBooking(booking.value)) {
+    return 'Back to History'
+  }
+  
+  // Check if it's a subscription
+  if (booking.value && booking.value.productType === 'Subscription') {
+    return 'Back to Subscriptions'
+  }
+  
+  // Default label
+  return 'Back to Bookings'
 }
 
 onMounted(() => {

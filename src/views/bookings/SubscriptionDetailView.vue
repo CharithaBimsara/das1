@@ -3,7 +3,7 @@
     <div class="space-y-6" v-if="subscription">
       <!-- Back Button -->
       <div class="flex items-center">
-        <router-link to="/bookings" class="flex items-center text-gray-600 hover:text-gray-900">
+        <router-link to="/bookings?tab=subscriptions" class="flex items-center text-gray-600 hover:text-gray-900">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
@@ -202,7 +202,7 @@
         </svg>
         <h3 class="text-lg font-medium text-gray-900 mb-2">Subscription Not Found</h3>
         <p class="text-gray-600 mb-4">The subscription with ID "{{ route.params.id }}" could not be found.</p>
-        <router-link to="/bookings" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+        <router-link to="/bookings?tab=subscriptions" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
@@ -645,7 +645,28 @@ const cancelSubscription = async () => {
 
 // Initialize page data
 onMounted(() => {
-  // Page is ready
+  // Load subscription data from localStorage (from BookingsView)
+  const savedBookings = localStorage.getItem('allBookings')
+  if (savedBookings) {
+    try {
+      const parsedBookings = JSON.parse(savedBookings)
+      const subscriptions = parsedBookings.filter((booking: any) => booking.productType === 'Subscription')
+      if (subscriptions.length > 0) {
+        allSubscriptions.value = subscriptions
+        console.log('Loaded subscriptions from localStorage:', subscriptions.length)
+      }
+    } catch (error) {
+      console.warn('Error loading subscriptions from localStorage:', error)
+    }
+  }
+  
+  // Update subscription statuses from localStorage (simulate real-time updates)
+  const bookingStatuses = JSON.parse(localStorage.getItem('bookingStatuses') || '{}')
+  allSubscriptions.value.forEach(subscription => {
+    if (bookingStatuses[subscription.id]) {
+      subscription.status = bookingStatuses[subscription.id]
+    }
+  })
 })
 </script>
 

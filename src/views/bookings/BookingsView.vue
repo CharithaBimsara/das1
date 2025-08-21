@@ -31,7 +31,10 @@
 
         <!-- Filters -->
         <div class="p-6 border-b border-gray-200">
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div :class="[
+            'grid grid-cols-1 gap-6',
+            activeTab === 'subscriptions' ? 'md:grid-cols-6' : 'md:grid-cols-5'
+          ]">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
               <input
@@ -126,7 +129,17 @@
               <select v-model="filters.subscriptionType" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm text-gray-900">
                 <option value="">All Periods</option>
                 <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
                 <option value="annually">Annually</option>
+              </select>
+            </div>
+            <!-- Show Subscription Status filter for subscriptions tab -->
+            <div v-if="activeTab === 'subscriptions'" class="md:col-span-1">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select v-model="filters.subscriptionStatus" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm text-gray-900">
+                <option value="">All Status</option>
+                <option value="confirmed">Active</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
             <div>
@@ -175,6 +188,12 @@
                 <th v-if="activeTab !== 'subscriptions'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Price
                 </th>
+                <th v-if="activeTab === 'subscriptions'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Monthly Price
+                </th>
+                <th v-if="activeTab === 'subscriptions'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Next Billing
+                </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -218,9 +237,21 @@
                 <td v-if="activeTab !== 'subscriptions'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   ${{ booking.totalPrice }}
                 </td>
+                <td v-if="activeTab === 'subscriptions'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  ${{ booking.totalPrice }}
+                </td>
+                <td v-if="activeTab === 'subscriptions'" class="px-6 py-4 whitespace-nowrap">
+                  <div v-if="booking.status === 'confirmed'" class="text-sm text-gray-900">{{ booking.nextBillingDate }}</div>
+                  <div v-else class="text-sm text-gray-500 italic">Cancelled</div>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span :class="getStatusClass(booking.status)" class="px-2 py-1 text-xs font-medium rounded-full">
-                    {{ booking.status }}
+                    <template v-if="activeTab === 'subscriptions'">
+                      {{ booking.status === 'confirmed' ? 'Active' : booking.status === 'cancelled' ? 'Cancelled' : booking.status }}
+                    </template>
+                    <template v-else>
+                      {{ booking.status }}
+                    </template>
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -232,10 +263,22 @@
                       </svg>
                     </router-link>
                     
-                    <!-- Cancel booking action for confirmed bookings and subscriptions -->
+                    <!-- Cancel subscription action for active subscriptions -->
                     <router-link
-                      v-if="booking.status === 'confirmed' && (activeTab === 'bookings' || activeTab === 'subscriptions')"
-                      :to="activeTab === 'subscriptions' ? `/subscriptions/${booking.id}/cancel` : `/bookings/${booking.id}/cancel`"
+                      v-if="activeTab === 'subscriptions' && booking.status === 'confirmed'"
+                      :to="`/subscriptions/${booking.id}/cancel`"
+                      class="text-orange-600 hover:text-orange-900 flex items-center space-x-1"
+                      title="Cancel Subscription"
+                    >
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path :d="mdiCancel" />
+                      </svg>
+                    </router-link>
+                    
+                    <!-- Cancel booking action for confirmed bookings -->
+                    <router-link
+                      v-if="activeTab === 'bookings' && booking.status === 'confirmed'"
+                      :to="`/bookings/${booking.id}/cancel`"
                       class="text-orange-600 hover:text-orange-900 flex items-center space-x-1"
                       title="Cancel Booking"
                     >
@@ -364,13 +407,18 @@
         </div>
       </div>
     </div>
+    
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { mdiEye, mdiPencil, mdiDelete, mdiCancel } from '@mdi/js'
+
+// Router
+const route = useRoute()
 
 // State
 const activeTab = ref('bookings')
@@ -396,7 +444,8 @@ const filters = ref({
   location: '',
   productType: '',
   userType: '',
-  subscriptionType: ''
+  subscriptionType: '',
+  subscriptionStatus: ''
 })
 
 // Pagination
@@ -761,13 +810,52 @@ const allBookings = ref([
 const filteredBookings = computed(() => {
   let bookings = allBookings.value
 
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]
+
   // Filter by tab
   if (activeTab.value === 'bookings') {
-    bookings = bookings.filter(b => b.status === 'confirmed' && b.productType !== 'Subscription')
+    bookings = bookings.filter(b => {
+      // Only show confirmed bookings that are not subscriptions
+      if (b.status !== 'confirmed' || b.productType === 'Subscription') {
+        return false
+      }
+      
+      // Only show bookings for today and future dates
+      if (b.date) {
+        return b.date >= todayStr
+      }
+      
+      return false
+    })
   } else if (activeTab.value === 'subscriptions') {
+    // Show all subscriptions (both active and cancelled) with proper filtering
     bookings = bookings.filter(b => b.productType === 'Subscription')
   } else {
-    bookings = bookings.filter(b => (b.status === 'completed' || b.status === 'cancelled') && b.productType !== 'Subscription')
+    // History tab includes:
+    // 1. Past confirmed bookings (before today)
+    // 2. Completed bookings
+    // 3. Cancelled bookings
+    // 4. Cancelled subscriptions
+    bookings = bookings.filter(b => {
+      // Include cancelled subscriptions
+      if (b.productType === 'Subscription' && b.status === 'cancelled') {
+        return true
+      }
+      
+      // Include completed or cancelled regular bookings
+      if (b.productType !== 'Subscription' && (b.status === 'completed' || b.status === 'cancelled')) {
+        return true
+      }
+      
+      // Include past confirmed bookings (confirmed bookings before today)
+      if (b.status === 'confirmed' && b.productType !== 'Subscription' && b.date && b.date < todayStr) {
+        return true
+      }
+      
+      return false
+    })
   }
 
   // Apply date range filter
@@ -806,6 +894,9 @@ const filteredBookings = computed(() => {
   }
   if (filters.value.subscriptionType) {
     bookings = bookings.filter(b => b.subscriptionType === filters.value.subscriptionType)
+  }
+  if (filters.value.subscriptionStatus) {
+    bookings = bookings.filter(b => b.status === filters.value.subscriptionStatus)
   }
   if (filters.value.userType) {
     bookings = bookings.filter(b => b.userType === filters.value.userType)
@@ -954,12 +1045,44 @@ const addNewBooking = (newBookingData: any) => {
 
 // Methods
 const getTabCount = (tabId: string) => {
+  const today = new Date()
+  const todayStr = today.toISOString().split('T')[0]
+  
   if (tabId === 'bookings') {
-    return allBookings.value.filter(b => b.status === 'confirmed' && b.productType !== 'Subscription').length
+    // Count only confirmed bookings (not subscriptions) for today and future dates
+    return allBookings.value.filter(b => 
+      b.status === 'confirmed' && 
+      b.productType !== 'Subscription' && 
+      b.date && 
+      b.date >= todayStr
+    ).length
   } else if (tabId === 'subscriptions') {
+    // Count all subscriptions (active and cancelled will be shown in subscriptions tab)
     return allBookings.value.filter(b => b.productType === 'Subscription').length
   } else {
-    return allBookings.value.filter(b => (b.status === 'completed' || b.status === 'cancelled') && b.productType !== 'Subscription').length
+    // History includes:
+    // 1. Past confirmed bookings (before today)
+    // 2. Completed bookings
+    // 3. Cancelled bookings
+    // 4. Cancelled subscriptions
+    return allBookings.value.filter(b => {
+      // Include cancelled subscriptions
+      if (b.productType === 'Subscription' && b.status === 'cancelled') {
+        return true
+      }
+      
+      // Include completed or cancelled regular bookings
+      if (b.productType !== 'Subscription' && (b.status === 'completed' || b.status === 'cancelled')) {
+        return true
+      }
+      
+      // Include past confirmed bookings (confirmed bookings before today)
+      if (b.status === 'confirmed' && b.productType !== 'Subscription' && b.date && b.date < todayStr) {
+        return true
+      }
+      
+      return false
+    }).length
   }
 }
 
@@ -988,7 +1111,8 @@ const resetFilters = () => {
     location: '',
     productType: '',
     userType: '',
-    subscriptionType: ''
+    subscriptionType: '',
+    subscriptionStatus: ''
   }
   currentPage.value = 1
 }
@@ -1130,6 +1254,12 @@ const handleClickOutside = (event: MouseEvent) => {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   
+  // Check for tab query parameter and set active tab
+  const tabParam = route.query.tab as string
+  if (tabParam && ['bookings', 'subscriptions', 'history'].includes(tabParam)) {
+    activeTab.value = tabParam
+  }
+  
   // Load bookings from localStorage if available (for persistence across sessions)
   const savedBookings = localStorage.getItem('allBookings')
   if (savedBookings) {
@@ -1167,6 +1297,14 @@ onMounted(() => {
 })
 
 // Watch for filter changes to reset pagination
+// Watch for route changes to update active tab
+watch(() => route.query.tab, (newTab) => {
+  if (newTab && typeof newTab === 'string' && ['bookings', 'subscriptions', 'history'].includes(newTab)) {
+    activeTab.value = newTab
+  }
+})
+
+// Reset page when filters or active tab change
 watch([() => filters.value, activeTab], () => {
   currentPage.value = 1
 }, { deep: true })

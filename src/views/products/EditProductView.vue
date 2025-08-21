@@ -10,14 +10,35 @@
             </svg>
           </router-link>
           <div>
-            <h1 class="text-xl font-bold text-gray-900">Add New Product</h1>
+            <h1 class="text-xl font-bold text-gray-900">Edit Product</h1>
+            <p class="text-sm text-gray-500" v-if="originalProduct">{{ originalProduct.name }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Form Content -->
-      <div class="max-w-6xl mx-auto">
-        <form @submit.prevent="saveProduct" class="space-y-6">
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+
+      <!-- Product Not Found -->
+      <div v-else-if="!originalProduct" class="bg-white rounded-xl shadow-card p-8 text-center">
+        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Product Not Found</h3>
+        <p class="text-gray-500 mb-6">The product you're trying to edit doesn't exist or has been removed.</p>
+        <router-link to="/products" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Products
+        </router-link>
+      </div>
+
+      <!-- Edit Form -->
+      <div v-else class="max-w-6xl mx-auto">
+        <form @submit.prevent="updateProduct" class="space-y-6">
           <!-- Single Card with All Sections -->
           <div class="bg-white rounded-xl shadow-card overflow-hidden">
             <div class="p-8 space-y-8">
@@ -112,9 +133,6 @@
                               </svg>
                             </button>
                           </div>
-                          <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            Image {{ index + 1 }}
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -147,6 +165,18 @@
                     <textarea v-model="form.description" rows="3"
                       class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                       placeholder="Enter product description"></textarea>
+                  </div>
+
+                  <!-- Status -->
+                  <div v-if="form.type">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select v-model="form.status"
+                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -376,18 +406,6 @@
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
-                          <!-- Price input for selected facilities -->
-                          <div class="ml-6">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Price per Hour</label>
-                            <div class="relative">
-                              <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                              <input type="number"
-                                     v-model.number="facility.pricePerHour"
-                                     step="0.01" min="0"
-                                     class="w-24 border border-gray-300 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                                     placeholder="0.00" />
-                            </div>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -409,25 +427,22 @@
 
           <!-- Action Buttons -->
           <div class="flex justify-between items-center pt-8 border-t border-gray-200">
-            <button type="button" @click="addAnotherProduct"
-              class="px-6 py-3 border-2 border-primary-600 text-primary-600 rounded-xl hover:bg-primary-50 hover:border-primary-700 transition-all duration-200 flex items-center space-x-3 font-medium shadow-sm hover:shadow-md">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Add Another Product</span>
-            </button>
+            <router-link :to="`/products/${productId}`"
+              class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium shadow-sm hover:shadow-md">
+              Cancel
+            </router-link>
             
             <div class="flex space-x-4">
-              <router-link to="/products"
-                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium shadow-sm hover:shadow-md">
-                Cancel
-              </router-link>
-              <button type="submit" :disabled="!isFormValid"
+              <button type="submit" :disabled="!isFormValid || isSaving"
                 class="px-8 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-primary-500 disabled:hover:to-primary-600 flex items-center space-x-3 font-semibold shadow-lg hover:shadow-xl">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-if="isSaving" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span>Create Product</span>
+                <span>{{ isSaving ? 'Updating...' : 'Update Product' }}</span>
               </button>
             </div>
           </div>
@@ -526,8 +541,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { 
   mdiOfficeBuilding, 
@@ -537,10 +552,19 @@ import {
   mdiCog 
 } from '@mdi/js'
 
+const route = useRoute()
 const router = useRouter()
 
-// Days of the week
+// Data
+const productId = route.params.id as string
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+// State
+const isLoading = ref(true)
+const isSaving = ref(false)
+const originalProduct = ref<any>(null)
+const showDefaultFacilityModal = ref(false)
+const showAdditionalFacilityModal = ref(false)
 
 // Sample locations data
 const locations = ref([
@@ -552,7 +576,7 @@ const locations = ref([
   { id: 'LOC006', name: 'Creative Space', address: '987 Design Ave' }
 ])
 
-// Available facilities from FacilitiesView
+// Available facilities
 const availableFacilities = ref([
   { id: 'FC-001', name: 'High-Speed WiFi', description: 'Reliable high-speed internet connection' },
   { id: 'FC-002', name: 'Projector & Screen', description: 'HD projector with large screen for presentations' },
@@ -563,10 +587,6 @@ const availableFacilities = ref([
   { id: 'FC-007', name: 'Climate Control', description: 'Individual temperature control system' },
   { id: 'FC-008', name: 'Parking Space', description: 'Dedicated parking spot included' }
 ])
-
-// Modal states
-const showDefaultFacilityModal = ref(false)
-const showAdditionalFacilityModal = ref(false)
 
 // Form data
 const form = ref({
@@ -590,8 +610,77 @@ const form = ref({
     name: string
     pricePerHour: number
   }>,
-  status: 'active'
+  status: 'active' as 'active' | 'inactive'
 })
+
+// Sample products data
+const sampleProducts = [
+  {
+    id: 'PROD001',
+    name: 'Executive Meeting Room',
+    type: 'Meeting Room',
+    locationName: 'Downtown Office',
+    locationAddress: '123 Business St',
+    locationId: 'LOC001',
+    status: 'active',
+    maxSeatingCapacity: 12,
+    pricePerHour: 50,
+    images: [
+      'https://images.unsplash.com/photo-1497366216548-37526070297c?w=500',
+      'https://images.unsplash.com/photo-1497366412874-3415097a27e7?w=500'
+    ],
+    description: 'Spacious executive meeting room with state-of-the-art video conferencing facilities',
+    openDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    openHours: { start: '08:00', end: '18:00' },
+    defaultFacilities: ['High-Speed WiFi', 'HD Projector & Screen', 'Whiteboard'],
+    additionalFacilities: [
+      { name: 'Coffee Machine', pricePerHour: 5 },
+      { name: 'Catering Service', pricePerHour: 15 }
+    ]
+  },
+  {
+    id: 'PROD002',
+    name: 'Modern Hot Desk',
+    type: 'Hot Desk',
+    locationName: 'Tech Hub',
+    locationAddress: '456 Innovation Ave',
+    locationId: 'LOC002',
+    status: 'active',
+    maxSeatingCapacity: 1,
+    pricePerHour: 8,
+    pricePerDay: 60,
+    images: ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=500'],
+    description: 'Modern hot desk in a vibrant coworking environment',
+    openDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    openHours: { start: '07:00', end: '19:00' },
+    defaultFacilities: ['High-Speed WiFi', 'Power Outlets', 'Ergonomic Chair'],
+    additionalFacilities: [
+      { name: 'External Monitor', pricePerHour: 3 },
+      { name: 'Keyboard & Mouse', pricePerHour: 2 }
+    ]
+  },
+  {
+    id: 'PROD003',
+    name: 'Private Dedicated Workspace',
+    type: 'Dedicated Desk',
+    locationName: 'Business Center',
+    locationAddress: '789 Corporate Blvd',
+    locationId: 'LOC003',
+    status: 'active',
+    maxSeatingCapacity: 1,
+    pricePerMonth: 800,
+    pricePerYear: 8500,
+    images: [],
+    description: 'Private dedicated workspace with personal storage',
+    openDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    openHours: { start: '06:00', end: '22:00' },
+    defaultFacilities: ['High-Speed WiFi', 'Storage Locker', 'Ergonomic Chair', 'Desk Lamp'],
+    additionalFacilities: [
+      { name: 'Printer Access', pricePerHour: 1 },
+      { name: 'Phone Line', pricePerHour: 2 }
+    ]
+  }
+]
 
 // Computed properties
 const isFormValid = computed(() => {
@@ -616,24 +705,51 @@ const isFormValid = computed(() => {
   }
 })
 
-// Watchers - Remove company watcher since we removed company selection
 // Methods
-const onCompanyChange = () => {
-  // Remove this method since we no longer have company selection
+const loadProduct = () => {
+  isLoading.value = true
+  
+  // Simulate API call
+  setTimeout(() => {
+    originalProduct.value = sampleProducts.find(p => p.id === productId) || null
+    
+    if (originalProduct.value) {
+      // Populate form with existing data
+      Object.assign(form.value, {
+        locationId: originalProduct.value.locationId,
+        type: originalProduct.value.type,
+        images: [...(originalProduct.value.images || [])],
+        name: originalProduct.value.name,
+        description: originalProduct.value.description || '',
+        maxSeatingCapacity: originalProduct.value.maxSeatingCapacity,
+        pricePerHour: originalProduct.value.pricePerHour || 0,
+        pricePerDay: originalProduct.value.pricePerDay || 0,
+        pricePerMonth: originalProduct.value.pricePerMonth || 0,
+        pricePerYear: originalProduct.value.pricePerYear || 0,
+        openDays: [...originalProduct.value.openDays],
+        openHours: { ...originalProduct.value.openHours },
+        defaultFacilities: [...(originalProduct.value.defaultFacilities || [])],
+        additionalFacilities: [...(originalProduct.value.additionalFacilities || [])],
+        status: originalProduct.value.status
+      })
+    }
+    
+    isLoading.value = false
+  }, 500)
 }
 
 const onProductTypeChange = () => {
   // Reset pricing fields when product type changes
-  form.value.pricePerHour = 0
-  form.value.pricePerDay = 0
-  form.value.pricePerMonth = 0
-  form.value.pricePerYear = 0
+  form.value.pricePerHour = originalProduct.value?.pricePerHour || 0
+  form.value.pricePerDay = originalProduct.value?.pricePerDay || 0
+  form.value.pricePerMonth = originalProduct.value?.pricePerMonth || 0
+  form.value.pricePerYear = originalProduct.value?.pricePerYear || 0
 }
 
 const handleImageUpload = (event: any) => {
   const files = event.target.files
   if (files) {
-    for (let i = 0; i < files.length; i++) {
+    for (let i = 0; i < files.length && form.value.images.length < 8; i++) {
       const file = files[i]
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -693,51 +809,38 @@ const updateAdditionalFacilityPrice = (facilityName: string, event: any) => {
   }
 }
 
-const resetForm = () => {
-  form.value = {
-    locationId: '',
-    type: '',
-    images: [],
-    name: '',
-    description: '',
-    maxSeatingCapacity: 1,
-    pricePerHour: 0,
-    pricePerDay: 0,
-    pricePerMonth: 0,
-    pricePerYear: 0,
-    openDays: [],
-    openHours: {
-      start: '09:00',
-      end: '17:00'
-    },
-    defaultFacilities: [],
-    additionalFacilities: [],
-    status: 'active'
-  }
-}
-
-const addAnotherProduct = () => {
-  if (confirm('This will clear the current form. Are you sure you want to add another product?')) {
-    resetForm()
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-}
-
-const saveProduct = () => {
+const updateProduct = async () => {
   if (!isFormValid.value) {
     alert('Please fill in all required fields')
     return
   }
 
-  // Here you would typically send the data to your API
-  console.log('Creating product:', form.value)
+  isSaving.value = true
   
-  // Show success message
-  alert('Product created successfully!')
-  
-  // Navigate back to products list
-  router.push('/products')
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // In real app, make API call to update product
+    console.log('Updating product:', form.value)
+    
+    // Show success message
+    alert('Product updated successfully!')
+    
+    // Navigate to product detail view
+    router.push(`/products/${productId}`)
+  } catch (error) {
+    console.error('Error updating product:', error)
+    alert('Failed to update product. Please try again.')
+  } finally {
+    isSaving.value = false
+  }
 }
+
+// Initialize
+onMounted(() => {
+  loadProduct()
+})
 </script>
 
 <style scoped>
@@ -765,35 +868,12 @@ button {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Image upload area improvements */
-.group:hover .group-hover\:bg-primary-100 {
-  background-color: rgb(219 234 254);
-}
-
-.group:hover .group-hover\:text-primary-600 {
-  color: rgb(37 99 235);
-}
-
-.group:hover .group-hover\:text-primary-500 {
-  color: rgb(59 130 246);
-}
-
 /* Form input focus improvements */
 input:focus,
 select:focus,
 textarea:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   transform: translateY(-1px);
-}
-
-/* Gradient backgrounds for better visual appeal */
-.bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--tw-gradient-stops));
-}
-
-/* Smooth scrolling for form navigation */
-html {
-  scroll-behavior: smooth;
 }
 
 /* Enhanced border radius for modern look */
@@ -816,47 +896,5 @@ html {
 
 .shadow-xl {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Loading state animations */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .5;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Custom scrollbar for modals */
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Improved focus states */
-.focus\:ring-2:focus {
-  box-shadow: 0 0 0 2px var(--tw-ring-color);
-}
-
-.focus\:ring-offset-2:focus {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--tw-ring-color);
 }
 </style>

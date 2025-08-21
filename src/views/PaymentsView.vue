@@ -3,11 +3,25 @@
     <div class="space-y-6">
       <!-- Page Header -->
       <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-900">Payments Management</h1>
-          <p class="text-gray-600">Manage payments, commissions, and transaction records</p>
-        </div>
+  <div class="bg-primary-50 border border-primary-200 rounded-lg px-4 py-2 flex items-center space-x-2 md:sticky md:top-0 z-50">
+            <svg class="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
+              <path :d="mdiWallet" />
+            </svg>
+            <span class="text-sm font-medium text-primary-700">
+              Total Payments:
+              <span class="font-bold text-primary-800">{{ filteredPayments.length }}</span>
+            </span>
+          </div>
         <div class="flex items-center space-x-3">
+          <button
+            @click="exportToExcel"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+            </svg>
+            <span>Export Excel</span>
+          </button>
           <button
             @click="showCommissionModal = true"
             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
@@ -17,102 +31,81 @@
             </svg>
             <span>Commission Setup</span>
           </button>
-          <div class="text-sm text-gray-500">
-            Total Payments: {{ filteredPayments.length }}
-          </div>
         </div>
       </div>
 
-      <!-- Commission Overview Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white rounded-xl shadow-card p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiCurrencyUsd" />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-gray-500">Total Revenue</h3>
-              <p class="text-2xl font-bold text-gray-900">${{ paymentStats.totalRevenue.toLocaleString() }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-card p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiPercent" />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-gray-500">Commission Earned</h3>
-              <p class="text-2xl font-bold text-gray-900">${{ paymentStats.commissionEarned.toLocaleString() }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-card p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiCreditCard" />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-gray-500">Transactions Today</h3>
-              <p class="text-2xl font-bold text-gray-900">{{ paymentStats.transactionsToday }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-card p-6">
-          <div class="flex items-center">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiTrendingUp" />
-                </svg>
-              </div>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-sm font-medium text-gray-500">Avg Transaction</h3>
-              <p class="text-2xl font-bold text-gray-900">${{ paymentStats.avgTransaction }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters -->
+      <!-- Filters: All in one row on desktop -->
       <div class="bg-white rounded-xl shadow-card p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Date Range From</label>
+  <div class="flex flex-col md:flex-row md:items-end md:space-x-1 gap-4 relative">
+          <div class="relative md:w-48">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
             <input
-              type="date"
-              v-model="filters.dateFrom"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              type="text"
+              v-model="dateRangeDisplay"
+              @click="showDatePicker = !showDatePicker"
+              readonly
+              class="date-input w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm text-gray-900 cursor-pointer"
+              placeholder="Select Date"
             />
+            <!-- Booking.com Style Date Range Picker -->
+            <div v-if="showDatePicker" class="date-picker-container absolute z-50 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-80 text-gray-900">
+              <div class="flex justify-between items-center mb-4">
+                <button @click="previousMonth" class="p-1 hover:bg-gray-100 rounded">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                  </svg>
+                </button>
+                <span class="font-medium">{{ currentMonthYear }}</span>
+                <button @click="nextMonth" class="p-1 hover:bg-gray-100 rounded">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                  </svg>
+                </button>
+              </div>
+              <!-- Calendar Grid -->
+              <div class="grid grid-cols-7 gap-1 mb-2">
+                <div v-for="day in ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']" :key="day" class="text-xs font-medium text-gray-500 text-center py-2">
+                  {{ day }}
+                </div>
+              </div>
+              <div class="grid grid-cols-7 gap-1">
+                <div
+                  v-for="date in calendarDates"
+                  :key="date.dateString"
+                  @click="selectDate(date)"
+                  :class="[
+                    'text-sm text-center py-2 cursor-pointer rounded',
+                    !date.isCurrentMonth ? 'text-gray-300' : 'text-gray-900',
+                    isDateSelected(date) ? 'bg-primary-600 text-white' : '',
+                    isDateInRange(date) ? 'bg-primary-100' : '',
+                    'hover:bg-primary-50'
+                  ]"
+                >
+                  {{ date.day }}
+                </div>
+              </div>
+              <div class="flex justify-end items-end mt-4 pt-4 border-t border-gray-200">
+                <div class="flex space-x-2">
+                  <button
+                    @click="clearDateRange"
+                    class="px-3 py-1 text-xs border border-gray-300 text-gray-600 rounded hover:bg-gray-50"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    @click="showDatePicker = false"
+                    :disabled="!filters.dateFrom"
+                    class="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Date Range To</label>
-            <input
-              type="date"
-              v-model="filters.dateTo"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-          </div>
-          <div>
+          <div class="md:w-40">
             <label class="block text-sm font-medium text-gray-700 mb-2">Product</label>
-            <select v-model="filters.product" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <select v-model="filters.product" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
               <option value="">All Products</option>
               <option value="meeting-room">Meeting Room</option>
               <option value="hot-desk">Hot Desk</option>
@@ -120,49 +113,71 @@
               <option value="event-space">Event Space</option>
             </select>
           </div>
-          <div>
+          <div class="md:w-48">
             <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
-            <select v-model="filters.location" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <select v-model="filters.location" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
               <option value="">All Locations</option>
               <option value="main-branch">Main Branch - Downtown</option>
               <option value="tech-hub">Tech Hub - Silicon Valley</option>
               <option value="creative-quarter">Creative Quarter</option>
             </select>
           </div>
-        </div>
-        <div class="mt-4 flex justify-end">
-          <button
-            @click="resetFilters"
-            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Reset Filters
-          </button>
+          <div class="md:w-40">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select v-model="filters.status" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
+              <option value="">All Status</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending (Subscription)</option>
+            </select>
+          </div>
+          <div class="md:w-40">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+            <select v-model="sortBy" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
+              <option value="date">Date</option>
+              <option value="amount">Amount</option>
+              <option value="booking">Booking ID</option>
+              <option value="commission">Commission</option>
+              <option value="subscriptions">Subscriptions</option>
+            </select>
+          </div>
+          <div class="flex items-end md:absolute md:right-0 md:top-6">
+            <button
+              @click="resetFilters"
+              class="px-6 py-2 border border-gray-300 text-gray-100 rounded-lg hover:bg-green-700 transition-colors bg-green-600"
+            >
+              Reset Filters
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Payments Table -->
       <div class="bg-white rounded-xl shadow-card overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-900">Payment List ({{ filteredPayments.length }})</h2>
-        </div>
+        
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer Name
+                  Booking ID
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Method
+                  Location
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Product
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location
+                  Additional Facilities
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Amount
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  PayMedia Commission
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
@@ -173,32 +188,20 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="payment in filteredPayments" :key="payment.id" class="hover:bg-gray-50">
+              <tr v-for="payment in sortedPayments" :key="payment.id" class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
-                          <path :d="mdiAccount" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">{{ payment.customerName }}</div>
-                      <div class="text-sm text-gray-500">{{ payment.customerEmail }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-semibold text-gray-900">${{ payment.amount }}</div>
+                  <div class="text-sm font-medium text-gray-900">{{ payment.bookingId }}</div>
                   <div class="text-sm text-gray-500">{{ payment.paymentId }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                      <path :d="mdiCreditCard" />
+                    <svg class="w-5 h-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path :d="mdiMapMarker" />
                     </svg>
-                    <span class="text-sm text-gray-900">{{ payment.method }}</span>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">{{ payment.locationName }}</div>
+                      <div class="text-sm text-gray-500">{{ payment.customerName }}</div>
+                    </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -206,17 +209,44 @@
                   <div class="text-sm text-gray-500">{{ payment.productType }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ payment.locationName }}</div>
+                  <div v-if="payment.additionalFacilities.length > 0" class="space-y-1">
+                    <div v-for="facility in payment.additionalFacilities" :key="facility.name" class="text-sm">
+                      <span class="text-gray-900">{{ facility.name }}</span>
+                      <span class="text-gray-500 ml-2">${{ facility.price }}</span>
+                    </div>
+                  </div>
+                  <div v-else class="text-sm text-gray-500">No additional facilities</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-semibold text-gray-900">${{ payment.totalAmount }}</div>
+                  <div class="text-sm text-gray-500">Base: ${{ payment.baseAmount }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-semibold text-green-600">${{ payment.commission }}</div>
+                  <div class="text-sm text-gray-500">{{ payment.commissionRate }}%</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span 
+                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                    :class="getStatusClass(payment.status)"
+                  >
+                    {{ payment.status }}
+                  </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-900">{{ formatDate(payment.date) }}</div>
                   <div class="text-sm text-gray-500">{{ payment.time }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <router-link :to="`/payments/${payment.id}`" class="text-primary-600 hover:text-primary-900 flex items-center space-x-1" title="View Payment Details">
+                  <router-link 
+                    :to="`/payments/${payment.id}`" 
+                    class="text-primary-600 hover:text-primary-900 flex items-center space-x-1" 
+                    title="View Payment Details"
+                  >
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <path :d="mdiEye" />
                     </svg>
+                    <span>View</span>
                   </router-link>
                 </td>
               </tr>
@@ -348,36 +378,132 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { 
   mdiCog, 
-  mdiCurrencyUsd, 
-  mdiPercent, 
-  mdiCreditCard, 
-  mdiTrendingUp, 
-  mdiAccount, 
-  mdiEye
+  mdiMapMarker, 
+  mdiEye,
+  mdiWallet
 } from '@mdi/js'
 
 // State
 const showCommissionModal = ref(false)
 
+// Date Picker State
+const showDatePicker = ref(false)
+const currentDate = ref(new Date())
+
 // Filters
 const filters = ref({
-  dateFrom: '',
-  dateTo: '',
+  dateFrom: '', // startDate
+  dateTo: '',   // endDate
   product: '',
-  location: ''
+  location: '',
+  status: ''
 })
 
-// Payment statistics
-const paymentStats = ref({
-  totalRevenue: 45750,
-  commissionEarned: 4575,
-  transactionsToday: 12,
-  avgTransaction: 156
+// Computed property for date range display
+const dateRangeDisplay = computed(() => {
+  if (filters.value.dateFrom && filters.value.dateTo) {
+    const startParts = filters.value.dateFrom.split('-')
+    const endParts = filters.value.dateTo.split('-')
+    const startDate = new Date(parseInt(startParts[0]), parseInt(startParts[1]) - 1, parseInt(startParts[2]))
+    const endDate = new Date(parseInt(endParts[0]), parseInt(endParts[1]) - 1, parseInt(endParts[2]))
+    return `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`
+  } else if (filters.value.dateFrom) {
+    const startParts = filters.value.dateFrom.split('-')
+    const startDate = new Date(parseInt(startParts[0]), parseInt(startParts[1]) - 1, parseInt(startParts[2]))
+    return `${startDate.toLocaleDateString()}`
+  }
+  return ''
 })
+
+// Calendar computed properties
+const currentMonthYear = computed(() => {
+  return currentDate.value.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+})
+
+const calendarDates = computed(() => {
+  const year = currentDate.value.getFullYear()
+  const month = currentDate.value.getMonth()
+  const firstDay = new Date(year, month, 1)
+  const startCalendar = new Date(firstDay)
+  startCalendar.setDate(startCalendar.getDate() - firstDay.getDay())
+  const dates = []
+  const current = new Date(startCalendar)
+  for (let i = 0; i < 42; i++) {
+    const currentDateObj = new Date(current)
+    const year = currentDateObj.getFullYear()
+    const monthStr = (currentDateObj.getMonth() + 1).toString().padStart(2, '0')
+    const day = currentDateObj.getDate().toString().padStart(2, '0')
+    const dateString = `${year}-${monthStr}-${day}`
+    dates.push({
+      day: currentDateObj.getDate(),
+      dateString: dateString,
+      isCurrentMonth: currentDateObj.getMonth() === month,
+      date: currentDateObj
+    })
+    current.setDate(current.getDate() + 1)
+  }
+  return dates
+})
+
+const previousMonth = () => {
+  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, 1)
+}
+const nextMonth = () => {
+  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 1)
+}
+
+const selectDate = (date: any) => {
+  if (!date.isCurrentMonth) return
+  const selectedDate = date.dateString
+  if (!filters.value.dateFrom || (filters.value.dateFrom && filters.value.dateTo)) {
+    filters.value.dateFrom = selectedDate
+    filters.value.dateTo = ''
+  } else if (filters.value.dateFrom && !filters.value.dateTo) {
+    if (selectedDate >= filters.value.dateFrom) {
+      filters.value.dateTo = selectedDate
+    } else {
+      filters.value.dateTo = filters.value.dateFrom
+      filters.value.dateFrom = selectedDate
+    }
+  }
+}
+
+const isDateSelected = (date: any) => {
+  return date.dateString === filters.value.dateFrom || date.dateString === filters.value.dateTo
+}
+const isDateInRange = (date: any) => {
+  if (!filters.value.dateFrom || !filters.value.dateTo) return false
+  const dateString = date.dateString
+  return dateString > filters.value.dateFrom && dateString < filters.value.dateTo
+}
+const clearDateRange = () => {
+  filters.value.dateFrom = ''
+  filters.value.dateTo = ''
+}
+
+// Click outside handler for closing date picker
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const datePickerContainer = target.closest('.date-picker-container')
+  const dateInput = target.closest('.date-input')
+  if (!datePickerContainer && !dateInput && showDatePicker.value) {
+    showDatePicker.value = false
+  }
+}
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+// Sorting
+const sortBy = ref('date')
+const sortOrder = ref('desc')
 
 // Commission settings
 const commissionSettings = ref([
@@ -413,82 +539,107 @@ const globalSettings = ref({
   processingFee: 2.9
 })
 
-// Sample payments data
+// Sample payments data with new structure
 const payments = ref([
   {
     id: 'PAY-001',
     paymentId: 'PM-2024-001',
+    bookingId: 'BR-2034',
     customerName: 'John Doe',
     customerEmail: 'john.doe@example.com',
-    amount: 150,
-    method: 'Credit Card',
     productName: 'Executive Board Room',
     productType: 'Meeting Room',
     locationName: 'Main Branch - Downtown',
-    bookingId: 'BR-2034',
+    baseAmount: 120,
+    additionalFacilities: [
+      { name: 'Projector', price: 20 },
+      { name: 'Catering', price: 10 }
+    ],
+    totalAmount: 150,
+    commission: 15.00,
+    commissionRate: 10.0,
+    status: 'paid',
     date: '2024-08-15',
-    time: '10:30 AM',
-    transactionRef: 'TXN-789123456'
+    time: '10:30 AM'
   },
   {
     id: 'PAY-002',
     paymentId: 'PM-2024-002',
+    bookingId: 'BR-2033',
     customerName: 'Jane Smith',
     customerEmail: 'jane.smith@example.com',
-    amount: 60,
-    method: 'Credit Card',
     productName: 'Hot Desk Area',
     productType: 'Hot Desk',
     locationName: 'Tech Hub - Silicon Valley',
-    bookingId: 'BR-2033',
+    baseAmount: 50,
+    additionalFacilities: [
+      { name: 'Monitor', price: 10 }
+    ],
+    totalAmount: 60,
+    commission: 7.50,
+    commissionRate: 12.5,
+    status: 'paid',
     date: '2024-08-15',
-    time: '2:15 PM',
-    transactionRef: 'TXN-789123457'
+    time: '2:15 PM'
   },
   {
     id: 'PAY-003',
     paymentId: 'PM-2024-003',
+    bookingId: 'BR-2032',
     customerName: 'Mike Johnson',
     customerEmail: 'mike.johnson@example.com',
-    amount: 400,
-    method: 'Credit Card',
     productName: 'Private Office Suite',
     productType: 'Private Office',
     locationName: 'Main Branch - Downtown',
-    bookingId: 'BR-2032',
+    baseAmount: 350,
+    additionalFacilities: [
+      { name: 'Printer Access', price: 25 },
+      { name: 'Phone Line', price: 25 }
+    ],
+    totalAmount: 400,
+    commission: 40.00,
+    commissionRate: 10.0,
+    status: 'pending',
     date: '2024-08-14',
-    time: '9:45 AM',
-    transactionRef: 'TXN-789123458'
+    time: '9:45 AM'
   },
   {
     id: 'PAY-004',
     paymentId: 'PM-2024-004',
+    bookingId: 'BR-2031',
     customerName: 'Sarah Wilson',
     customerEmail: 'sarah.wilson@example.com',
-    amount: 50,
-    method: 'Credit Card',
     productName: 'Meeting Room Small',
     productType: 'Meeting Room',
     locationName: 'Creative Quarter',
-    bookingId: 'BR-2031',
+    baseAmount: 50,
+    additionalFacilities: [],
+    totalAmount: 50,
+    commission: 4.00,
+    commissionRate: 8.0,
+    status: 'paid',
     date: '2024-08-14',
-    time: '3:20 PM',
-    transactionRef: 'TXN-789123459'
+    time: '3:20 PM'
   },
   {
     id: 'PAY-005',
     paymentId: 'PM-2024-005',
+    bookingId: 'BR-2030',
     customerName: 'Robert Davis',
     customerEmail: 'robert.davis@example.com',
-    amount: 180,
-    method: 'Credit Card',
     productName: 'Conference Room',
     productType: 'Meeting Room',
     locationName: 'Tech Hub - Silicon Valley',
-    bookingId: 'BR-2030',
+    baseAmount: 150,
+    additionalFacilities: [
+      { name: 'Video Conference', price: 30 }
+    ],
+    totalAmount: 180,
+    commission: 22.50,
+    commissionRate: 12.5,
+    status: 'pending',
     date: '2024-08-13',
-    time: '11:00 AM',
-    transactionRef: 'TXN-789123460'
+    time: '11:00 AM'
   }
 ])
 
@@ -529,7 +680,54 @@ const filteredPayments = computed(() => {
     )
   }
 
+  // Apply status filter
+  if (filters.value.status) {
+    filtered = filtered.filter(payment => payment.status === filters.value.status)
+  }
+
   return filtered
+})
+
+const sortedPayments = computed(() => {
+  const sorted = [...filteredPayments.value]
+  
+  sorted.sort((a, b) => {
+    let aVal, bVal
+    
+    switch (sortBy.value) {
+      case 'date':
+        aVal = new Date(a.date).getTime()
+        bVal = new Date(b.date).getTime()
+        break
+      case 'amount':
+        aVal = a.totalAmount
+        bVal = b.totalAmount
+        break
+      case 'booking':
+        aVal = a.bookingId
+        bVal = b.bookingId
+        break
+      case 'commission':
+        aVal = a.commission
+        bVal = b.commission
+        break
+      case 'subscriptions':
+        aVal = a.status === 'pending' ? 1 : 0
+        bVal = b.status === 'pending' ? 1 : 0
+        break
+      default:
+        aVal = a.date
+        bVal = b.date
+    }
+    
+    if (sortOrder.value === 'asc') {
+      return aVal > bVal ? 1 : -1
+    } else {
+      return aVal < bVal ? 1 : -1
+    }
+  })
+  
+  return sorted
 })
 
 // Methods
@@ -542,13 +740,33 @@ const formatDate = (dateString: string) => {
   })
 }
 
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case 'paid':
+      return 'bg-green-100 text-green-800'
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800'
+    default:
+      return 'bg-gray-100 text-gray-800'
+  }
+}
+
 const resetFilters = () => {
   filters.value = {
     dateFrom: '',
     dateTo: '',
     product: '',
-    location: ''
+    location: '',
+    status: ''
   }
+  sortBy.value = 'date'
+  sortOrder.value = 'desc'
+}
+
+const exportToExcel = () => {
+  // In a real app, this would generate and download an Excel file
+  console.log('Exporting to Excel...', filteredPayments.value)
+  alert('Excel export functionality would be implemented here!')
 }
 
 const saveCommissionSettings = () => {

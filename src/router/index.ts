@@ -29,6 +29,8 @@ import ViewFacilityView from '@/views/facilities/ViewFacilityView.vue'
 // Products
 import ProductsView from '@/views/ProductsView.vue'
 import AddProductView from '@/views/products/AddProductView.vue'
+import ProductsViewDetails from '@/views/ProductsViewDetails.vue'
+import EditProductView from '@/views/products/EditProductView.vue'
 
 // Locations
 import LocationsView from '@/views/LocationsView.vue'
@@ -155,6 +157,18 @@ const routes: RouteRecordRaw[] = [
     path: '/products/add',
     name: 'AddProduct',
     component: AddProductView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/products/:id',
+    name: 'ProductsViewDetails',
+    component: ProductsViewDetails,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/products/:id/edit',
+    name: 'EditProduct',
+    component: EditProductView,
     meta: { requiresAuth: true }
   },
   {

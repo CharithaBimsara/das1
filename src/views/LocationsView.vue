@@ -27,7 +27,7 @@
       <!-- Locations Table -->
       <div class="bg-white rounded-xl shadow-card overflow-hidden">
         <div class="bg-white  shadow-card p-6 border-b">
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div class="md:col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-2">Search Locations</label>
             <div class="relative">
@@ -59,16 +59,6 @@
               <option value="creativespaces">Creative Spaces LLC</option>
             </select>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Product</label>
-            <select v-model="filters.product" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-black">
-              <option value="">All Products</option>
-              <option value="coworking">Co-working Space</option>
-              <option value="meeting">Meeting Room</option>
-              <option value="office">Private Office</option>
-              <option value="event">Event Space</option>
-            </select>
-          </div>
           <div class="flex items-end justify-end">
             <button
               @click="resetFilters"
@@ -88,12 +78,6 @@
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Address
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Listed Companies
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Listed Spaces
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -123,13 +107,6 @@
                 <td class="px-6 py-4">
                   <div class="text-sm text-gray-900">{{ location.address }}</div>
                   <div class="text-sm text-gray-500">{{ location.city }}, {{ location.country }}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ location.listedCompanies || location.companyName }}</div>
-                  <div class="text-sm text-gray-500">{{ location.companyCount || 1 }} {{ (location.companyCount || 1) === 1 ? 'company' : 'companies' }}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ location.totalSpaces }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span :class="getStatusClass(location.status)" class="px-2 py-1 text-xs font-medium rounded-full">
@@ -304,7 +281,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
-import { mdiMapMarker, mdiEye, mdiPencil, mdiDelete, mdiLocationEnter } from '@mdi/js'
+import { mdiMapMarker, mdiEye, mdiPencil, mdiDelete } from '@mdi/js'
 
 // State
 const searchQuery = ref('')
@@ -318,7 +295,7 @@ const filters = ref({
 
 // Form data
 const form = ref({
-  id: null as number | null,
+  id: null as string | null,
   name: '',
   address: '',
   city: '',
@@ -498,12 +475,15 @@ const saveLocation = () => {
     locations.value.push(newLocation)
   } else {
     // Edit existing location
-    const index = locations.value.findIndex(l => l.id === form.value.id)
-    if (index !== -1) {
-      locations.value[index] = { 
-        ...locations.value[index],
-        ...form.value,
-        companyName: companyNames[form.value.companyId]
+    if (form.value.id) {
+      const index = locations.value.findIndex(l => l.id === form.value.id)
+      if (index !== -1) {
+        locations.value[index] = { 
+          ...locations.value[index],
+          ...form.value,
+          id: form.value.id,
+          companyName: companyNames[form.value.companyId]
+        }
       }
     }
   }

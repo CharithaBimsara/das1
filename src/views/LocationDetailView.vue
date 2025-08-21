@@ -22,7 +22,6 @@
             </div>
             <div>
               <h1 class="text-2xl font-bold text-gray-900">{{ location.name }}</h1>
-              <p class="text-gray-600 mt-1">{{ location.companyName }}</p>
               
               <!-- Location Information -->
               <div class="mt-4 space-y-2">
@@ -95,7 +94,6 @@ const location = ref({
   address: '123 Business Street, Suite 100',
   city: 'New York',
   country: 'United States',
-  companyName: 'WorkHub Co.',
   status: 'active',
   mapUrl: 'https://maps.google.com/example1',
   contactPersonName: 'John Smith',

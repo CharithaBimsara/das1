@@ -1,6 +1,6 @@
 <template>
   <AdminLayout>
-    <div class="space-y-6" v-if="customer">
+    <div class="space-y-6" v-if="customer && !loading">
       <!-- Back Button -->
       <div class="flex items-center">
         <router-link to="/customers" class="flex items-center text-gray-600 hover:text-gray-900">
@@ -158,7 +158,14 @@
         </div>
         
         <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
+          <!-- Loading state for bookings -->
+          <div v-if="loading" class="flex items-center justify-center py-12">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <span class="ml-2 text-gray-600">Loading booking history...</span>
+          </div>
+          
+          <!-- Bookings table -->
+          <table v-else class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -191,7 +198,7 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-900">{{ formatDate(booking.date) }}</div>
-                  <div class="text-sm text-gray-500">{{ booking.time }}</div>
+                  <div class="text-sm text-gray-500">{{ booking.startTime }} - {{ booking.endTime }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
@@ -200,7 +207,7 @@
                     </div>
                     <div class="ml-3">
                       <div class="text-sm font-medium text-gray-900">{{ booking.productName }}</div>
-                      <div class="text-sm text-gray-500">{{ booking.location }}</div>
+                      <div class="text-sm text-gray-500">{{ booking.locationName }}</div>
                     </div>
                   </div>
                 </td>
@@ -208,7 +215,7 @@
                   {{ booking.duration }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  ${{ booking.price }}
+                  ${{ booking.totalPrice }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span :class="getBookingStatusClass(booking.status)" class="px-2 py-1 text-xs font-medium rounded-full">
@@ -228,7 +235,7 @@
         </div>
 
         <!-- Empty State for Bookings -->
-        <div v-if="filteredBookings.length === 0" class="text-center py-12">
+        <div v-if="!loading && filteredBookings.length === 0" class="text-center py-12">
           <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -250,6 +257,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { useCustomers } from '@/composables/useCustomers'
+import { useBookings } from '@/composables/useBookings'
+import { customerApi } from '@/services/api'
+import type { Booking } from '@/services/api'
 import { 
   mdiAccount, 
   mdiEmail, 
@@ -268,6 +278,11 @@ import {
 const route = useRoute()
 const bookingFilter = ref('')
 const { getCustomerById, toggleCustomerStatus: toggleStatus, loadPersistedStatuses } = useCustomers()
+const { allBookings } = useBookings()
+
+// Loading state
+const loading = ref(true)
+const customerBookings = ref<Booking[]>([])
 
 // Get customer data from shared store
 const customerId = route.params.id as string
@@ -275,7 +290,11 @@ const customer = computed(() => {
   // Get customer from shared store or fallback to sample data
   const sharedCustomer = getCustomerById(customerId)
   if (sharedCustomer.value) {
-    return sharedCustomer.value
+    // Update total bookings with actual data
+    return {
+      ...sharedCustomer.value,
+      totalBookings: customerBookings.value.length
+    }
   }
   // Fallback sample data if not found in shared store
   return {
@@ -284,66 +303,32 @@ const customer = computed(() => {
     email: 'john.doe@example.com',
     phone: '+1 (555) 123-4567',
     customerType: 'registered',
-    totalBookings: 15,
+    totalBookings: customerBookings.value.length,
     status: 'active',
     dateJoined: '2024-01-15'
   }
 })
 
 // Customer statistics
-const customerStats = ref({
-  totalSpent: 2850,
-  upcomingBookings: 3,
-  cancellations: 2
+const customerStats = computed(() => {
+  const customerBookingsList = customerBookings.value
+  const totalSpent = customerBookingsList.reduce((sum, booking) => sum + booking.totalPrice, 0)
+  const upcomingBookings = customerBookingsList.filter(booking => {
+    const bookingDate = new Date(booking.date)
+    const today = new Date()
+    return bookingDate > today && (booking.status === 'confirmed' || booking.status === 'pending')
+  }).length
+  const cancellations = customerBookingsList.filter(booking => booking.status === 'cancelled').length
+
+  return {
+    totalSpent,
+    upcomingBookings,
+    cancellations
+  }
 })
 
-// Sample booking history
-const bookingHistory = ref([
-  {
-    id: 'BR-2034',
-    date: '2024-08-15',
-    time: '10:00 AM - 12:00 PM',
-    productName: 'Executive Board Room',
-    location: 'Main Branch - Floor 5',
-    duration: '2 hours',
-    price: 150,
-    status: 'confirmed',
-    productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=50&h=50&fit=crop&crop=center'
-  },
-  {
-    id: 'BR-2025',
-    date: '2024-08-10',
-    time: '2:00 PM - 6:00 PM',
-    productName: 'Hot Desk Area',
-    location: 'Downtown Office - Floor 2',
-    duration: '4 hours',
-    price: 60,
-    status: 'completed',
-    productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=50&h=50&fit=crop&crop=center'
-  },
-  {
-    id: 'BR-2018',
-    date: '2024-08-05',
-    time: '9:00 AM - 5:00 PM',
-    productName: 'Private Office Suite',
-    location: 'Tech Hub - Floor 3',
-    duration: '8 hours',
-    price: 400,
-    status: 'completed',
-    productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=50&h=50&fit=crop&crop=center'
-  },
-  {
-    id: 'BR-2010',
-    date: '2024-07-28',
-    time: '3:00 PM - 4:00 PM',
-    productName: 'Meeting Room Small',
-    location: 'Main Branch - Floor 2',
-    duration: '1 hour',
-    price: 50,
-    status: 'cancelled',
-    productImage: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=50&h=50&fit=crop&crop=center'
-  }
-])
+// Replace sample booking history with actual data
+const bookingHistory = computed(() => customerBookings.value)
 
 // Computed properties
 const filteredBookings = computed(() => {
@@ -407,9 +392,40 @@ const resetPassword = () => {
   }
 }
 
-onMounted(() => {
+// Function to fetch customer bookings
+const fetchCustomerBookings = async () => {
+  try {
+    loading.value = true
+    const response = await customerApi.getCustomerBookings(customerId)
+    
+    if (response.success && response.data) {
+      customerBookings.value = response.data
+    } else {
+      console.error('Failed to fetch customer bookings:', response.message)
+      // Fallback to all bookings filtered by customer
+      customerBookings.value = allBookings.value.filter(booking => 
+        booking.customerName === customer.value?.name ||
+        booking.customerEmail === customer.value?.email
+      )
+    }
+  } catch (error) {
+    console.error('Error fetching customer bookings:', error)
+    // Fallback to all bookings filtered by customer
+    customerBookings.value = allBookings.value.filter(booking => 
+      booking.customerName === customer.value?.name ||
+      booking.customerEmail === customer.value?.email
+    )
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
   // Load persisted customer statuses from localStorage
   loadPersistedStatuses()
   console.log('Loading customer details for ID:', route.params.id)
+  
+  // Fetch customer bookings
+  await fetchCustomerBookings()
 })
 </script>

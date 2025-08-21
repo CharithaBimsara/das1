@@ -22,31 +22,6 @@
           <div class="bg-white rounded-xl shadow-card overflow-hidden">
             <div class="p-8 space-y-16">
               
-              <!-- Company Selection Section -->
-              <div>
-                <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path :d="mdiOfficeBuilding" />
-                  </svg>
-                  Select Company
-                </h2>
-                
-                <div class="grid grid-cols-1 gap-6">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Company <span class="text-red-500">*</span>
-                    </label>
-                    <select v-model="form.companyId" required @change="onCompanyChange"
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
-                      <option value="">Select a company</option>
-                      <option v-for="company in companies" :key="company.id" :value="company.id">
-                        {{ company.name }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
               <!-- Location Details Section -->
               <div>
                 <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
@@ -102,39 +77,30 @@
                   Contact Information
                 </h2>
                 
-                <!-- Same as Company Checkbox -->
-                <div class="mb-6">
-                  <label class="flex items-center">
-                    <input type="checkbox" v-model="form.sameAsCompany" @change="onSameAsCompanyChange"
-                      class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50" />
-                    <span class="ml-2 text-sm text-gray-900">Same as company contact</span>
-                  </label>
-                </div>
-
                 <!-- Contact Fields -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Contact Person Name <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" v-model="form.contactPersonName" required :disabled="form.sameAsCompany"
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    <input type="text" v-model="form.contactPersonName" required
+                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                       placeholder="Enter contact person name" />
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Contact Phone Number <span class="text-red-500">*</span>
                     </label>
-                    <input type="tel" v-model="form.contactPhone" required :disabled="form.sameAsCompany"
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    <input type="tel" v-model="form.contactPhone" required
+                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                       placeholder="+1-555-0123" />
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Email <span class="text-red-500">*</span>
                     </label>
-                    <input type="email" v-model="form.contactEmail" required :disabled="form.sameAsCompany"
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    <input type="email" v-model="form.contactEmail" required
+                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
                       placeholder="contact@company.com" />
                   </div>
                 </div>
@@ -166,7 +132,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '../../components/layout/AdminLayout.vue'
-import { mdiOfficeBuilding, mdiMapMarker, mdiAccount } from '@mdi/js'
+import { mdiMapMarker, mdiAccount } from '@mdi/js'
 
 const route = useRoute()
 const router = useRouter()
@@ -178,21 +144,10 @@ const form = ref({
   address: '',
   mapUrl: '',
   location: '',
-  companyId: '',
   contactPersonName: '',
   contactPhone: '',
-  contactEmail: '',
-  sameAsCompany: false
+  contactEmail: ''
 })
-
-// Companies data
-const companies = ref([
-  { id: 'COMP001', name: 'ABC Corporation' },
-  { id: 'COMP002', name: 'XYZ Industries' },
-  { id: 'COMP003', name: 'Global Solutions Inc.' },
-  { id: 'COMP004', name: 'Tech Innovations Ltd.' },
-  { id: 'COMP005', name: 'Future Systems' }
-])
 
 // Sample location data - in real app, this would come from API
 const sampleLocation = {
@@ -201,7 +156,6 @@ const sampleLocation = {
   address: '123 Business Street, Commercial District',
   mapUrl: 'https://maps.google.com/sample',
   location: 'New York, NY',
-  companyId: 'COMP001',
   contactPersonName: 'John Smith',
   contactPhone: '+1-555-0123',
   contactEmail: 'john@abccorp.com'
@@ -211,14 +165,9 @@ const sampleLocation = {
 const isFormValid = computed(() => {
   return form.value.name && 
          form.value.address && 
-         form.value.companyId &&
          form.value.contactPersonName && 
          form.value.contactPhone && 
          form.value.contactEmail
-})
-
-const selectedCompany = computed(() => {
-  return companies.value.find(company => company.id === form.value.companyId)
 })
 
 // Methods
@@ -228,32 +177,6 @@ function loadLocationData() {
   
   // For demo, we'll use sample data
   Object.assign(form.value, sampleLocation)
-}
-
-function onCompanyChange() {
-  if (form.value.sameAsCompany) {
-    updateContactFromCompany()
-  }
-}
-
-function onSameAsCompanyChange() {
-  if (form.value.sameAsCompany) {
-    updateContactFromCompany()
-  } else {
-    // Clear contact fields when unchecked
-    form.value.contactPersonName = ''
-    form.value.contactPhone = ''
-    form.value.contactEmail = ''
-  }
-}
-
-function updateContactFromCompany() {
-  if (selectedCompany.value) {
-    // In a real app, you'd fetch company contact details
-    form.value.contactPersonName = `Contact Person - ${selectedCompany.value.name}`
-    form.value.contactPhone = '+1-555-0000'
-    form.value.contactEmail = `contact@${selectedCompany.value.name.toLowerCase().replace(/ /g, '')}.com`
-  }
 }
 
 function updateLocation() {

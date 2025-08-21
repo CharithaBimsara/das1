@@ -506,15 +506,6 @@ const calendarDates = computed(() => {
   return dates
 })
 
-const calculateNights = computed(() => {
-  if (filters.value.startDate && filters.value.endDate) {
-    const start = new Date(filters.value.startDate)
-    const end = new Date(filters.value.endDate)
-    const diffTime = Math.abs(end.getTime() - start.getTime())
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  }
-  return 0
-})
 
 // Sample bookings data - Using actual product details
 const allBookings = ref([

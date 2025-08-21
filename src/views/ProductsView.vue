@@ -24,7 +24,7 @@
       <!-- Search and Filters -->
       <div class="bg-white rounded-xl shadow-card p-6">
         
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div class="md:col-span-1">
             <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <div class="relative">
@@ -48,15 +48,6 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Company</label>
-            <select v-model="filters.company" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-black">
-              <option value="">All Companies</option>
-              <option v-for="company in companies" :key="company.id" :value="company.id">
-                {{ company.name }}
-              </option>
-            </select>
-          </div>
-          <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Product Type</label>
             <select v-model="filters.productType" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-black">
               <option value="">All Types</option>
@@ -65,7 +56,7 @@
               <option value="Dedicated Desk">Dedicated Desk</option>
             </select>
           </div>
-          <div class="flex items-end justify-end">
+          <div class="md:col-span-2 flex items-end justify-end">
             <button @click="resetFilters"
               class="px-6 py-2 border border-gray-300 text-gray-100 rounded-lg hover:bg-green-700 transition-colors bg-green-600">
               Reset Filters
@@ -85,9 +76,6 @@
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Location
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Company
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -116,9 +104,6 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm text-gray-900">{{ product.locationName }}</div>
                   <div class="text-sm text-gray-500">{{ product.locationAddress }}</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ product.companyName }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <span :class="getStatusClass(product.status)" class="px-2 py-1 text-xs font-medium rounded-full">
@@ -236,19 +221,10 @@ const isDeleting = ref(false)
 // Filters
 const filters = ref({
   status: '',
-  company: '',
   productType: ''
 })
 
 // Sample data
-const companies = ref([
-  { id: 'COMP001', name: 'ABC Corporation' },
-  { id: 'COMP002', name: 'XYZ Industries' },
-  { id: 'COMP003', name: 'Global Solutions Inc.' },
-  { id: 'COMP004', name: 'Tech Innovations Ltd.' },
-  { id: 'COMP005', name: 'Future Systems' }
-])
-
 const products = ref([
   {
     id: 'PROD001',
@@ -340,11 +316,6 @@ const filteredProducts = computed(() => {
     filtered = filtered.filter(product => product.status === filters.value.status)
   }
 
-  // Company filter
-  if (filters.value.company) {
-    filtered = filtered.filter(product => product.companyId === filters.value.company)
-  }
-
   // Product type filter
   if (filters.value.productType) {
     filtered = filtered.filter(product => product.type === filters.value.productType)
@@ -425,7 +396,6 @@ const resetFilters = () => {
   searchQuery.value = ''
   filters.value = {
     status: '',
-    company: '',
     productType: ''
   }
 }

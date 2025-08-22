@@ -301,7 +301,7 @@
         </div>
 
         <!-- Pagination -->
-        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+        <!-- <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
           <div class="flex items-center justify-between">
             <div class="flex-1 flex justify-between sm:hidden">
               <button @click="previousPage" :disabled="currentPage === 1"
@@ -349,7 +349,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
 
         <!-- Empty State -->
         <div v-if="filteredBookings.length === 0" class="text-center py-12">
@@ -1302,6 +1302,25 @@ watch([() => filters.value, activeTab], () => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+})
+
+// Watch for tab changes to update status of past confirmed bookings
+watch(activeTab, (newTab) => {
+  if (newTab === 'history') {
+    const todayStr = new Date().toISOString().split('T')[0]
+    allBookings.value.forEach(booking => {
+      if (
+        booking.status === 'confirmed' &&
+        booking.productType !== 'Subscription' &&
+        booking.date &&
+        booking.date < todayStr
+      ) {
+        booking.status = 'completed'
+      }
+    })
+    // Persist status changes to localStorage
+    localStorage.setItem('allBookings', JSON.stringify(allBookings.value))
+  }
 })
 
 // Expose public functions for external access

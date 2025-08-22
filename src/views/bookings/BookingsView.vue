@@ -129,7 +129,6 @@
               <select v-model="filters.subscriptionType" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm text-gray-900">
                 <option value="">All Periods</option>
                 <option value="monthly">Monthly</option>
-                <option value="weekly">Weekly</option>
                 <option value="annually">Annually</option>
               </select>
             </div>

@@ -37,33 +37,57 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Location Name <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" v-model="form.name" required
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                    <input type="text" v-model="form.name"
+                      :class="[
+                        'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                        showValidation && !form.name.trim() ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300 border'
+                      ]"
                       placeholder="Enter location name" />
+                    <div v-if="showValidation && !form.name.trim()" class="mt-1 text-sm text-red-600">
+                      Location name is required
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Address <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" v-model="form.address" required
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                    <input type="text" v-model="form.address"
+                      :class="[
+                        'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                        showValidation && !form.address.trim() ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300 border'
+                      ]"
                       placeholder="Enter full address" />
+                    <div v-if="showValidation && !form.address.trim()" class="mt-1 text-sm text-red-600">
+                      Address is required
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Map URL
+                      Map URL <span class="text-red-500">*</span>
                     </label>
                     <input type="url" v-model="form.mapUrl"
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                      :class="[
+                        'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                        showValidation && !form.mapUrl.trim() ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300 border'
+                      ]"
                       placeholder="https://maps.google.com/..." />
+                    <div v-if="showValidation && !form.mapUrl.trim()" class="mt-1 text-sm text-red-600">
+                      Map URL is required
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Location
+                      Location <span class="text-red-500">*</span>
                     </label>
                     <input type="text" v-model="form.location"
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                      :class="[
+                        'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                        showValidation && !form.location.trim() ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300 border'
+                      ]"
                       placeholder="City, State/Province" />
+                    <div v-if="showValidation && !form.location.trim()" class="mt-1 text-sm text-red-600">
+                      Location is required
+                    </div>
                   </div>
                 </div>
               </div>
@@ -83,25 +107,43 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Contact Person Name <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" v-model="form.contactPersonName" required
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                    <input type="text" v-model="form.contactPersonName"
+                      :class="[
+                        'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                        showValidation && !form.contactPersonName.trim() ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300 border'
+                      ]"
                       placeholder="Enter contact person name" />
+                    <div v-if="showValidation && !form.contactPersonName.trim()" class="mt-1 text-sm text-red-600">
+                      Contact person name is required
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Contact Phone Number <span class="text-red-500">*</span>
                     </label>
-                    <input type="tel" v-model="form.contactPhone" required
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                    <input type="tel" v-model="form.contactPhone"
+                      :class="[
+                        'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                        showValidation && !form.contactPhone.trim() ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300 border'
+                      ]"
                       placeholder="+1-555-0123" />
+                    <div v-if="showValidation && !form.contactPhone.trim()" class="mt-1 text-sm text-red-600">
+                      Contact phone number is required
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                       Email <span class="text-red-500">*</span>
                     </label>
-                    <input type="email" v-model="form.contactEmail" required
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
+                    <input type="email" v-model="form.contactEmail"
+                      :class="[
+                        'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                        showValidation && !form.contactEmail.trim() ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300 border'
+                      ]"
                       placeholder="contact@company.com" />
+                    <div v-if="showValidation && !form.contactEmail.trim()" class="mt-1 text-sm text-red-600">
+                      Email is required
+                    </div>
                   </div>
                 </div>
               </div>
@@ -112,8 +154,8 @@
                   class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                   Cancel
                 </router-link>
-                <button type="submit" :disabled="!isFormValid"
-                  class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2">
+                <button type="submit"
+                  class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
@@ -147,10 +189,15 @@ const form = ref({
   contactEmail: ''
 })
 
+// Validation state for custom error display
+const showValidation = ref(false)
+
 // Form validation
 const isFormValid = computed(() => {
   return form.value.name.trim() !== '' &&
          form.value.address.trim() !== '' &&
+         form.value.mapUrl.trim() !== '' &&
+         form.value.location.trim() !== '' &&
          form.value.contactPersonName.trim() !== '' &&
          form.value.contactPhone.trim() !== '' &&
          form.value.contactEmail.trim() !== ''
@@ -158,8 +205,8 @@ const isFormValid = computed(() => {
 
 // Methods
 const saveLocation = () => {
+  showValidation.value = true
   if (!isFormValid.value) {
-    alert('Please fill in all required fields')
     return
   }
 

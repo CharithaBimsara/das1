@@ -287,7 +287,7 @@ const customerBookings = ref<Booking[]>([])
 // Get customer data from shared store
 const customerId = route.params.id as string
 const customer = computed(() => {
-  // Get customer from shared store or fallback to sample data
+  // Get customer from shared store only
   const sharedCustomer = getCustomerById(customerId)
   if (sharedCustomer.value) {
     // Update total bookings with actual data
@@ -296,21 +296,19 @@ const customer = computed(() => {
       totalBookings: customerBookings.value.length
     }
   }
-  // Fallback sample data if not found in shared store
-  return {
-    id: 'CU-001',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    customerType: 'registered',
-    totalBookings: customerBookings.value.length,
-    status: 'active',
-    dateJoined: '2024-01-15'
-  }
+  // If not found, return null
+  return null
 })
 
 // Customer statistics
 const customerStats = computed(() => {
+  if (!customer.value) {
+    return {
+      totalSpent: 0,
+      upcomingBookings: 0,
+      cancellations: 0
+    }
+  }
   const customerBookingsList = customerBookings.value
   const totalSpent = customerBookingsList.reduce((sum, booking) => sum + booking.totalPrice, 0)
   const upcomingBookings = customerBookingsList.filter(booking => {
@@ -319,7 +317,6 @@ const customerStats = computed(() => {
     return bookingDate > today && (booking.status === 'confirmed' || booking.status === 'pending')
   }).length
   const cancellations = customerBookingsList.filter(booking => booking.status === 'cancelled').length
-
   return {
     totalSpent,
     upcomingBookings,
@@ -327,8 +324,8 @@ const customerStats = computed(() => {
   }
 })
 
-// Replace sample booking history with actual data
-const bookingHistory = computed(() => customerBookings.value)
+// Only show booking history for real customers
+const bookingHistory = computed(() => customer.value ? customerBookings.value : [])
 
 // Computed properties
 const filteredBookings = computed(() => {
@@ -379,42 +376,36 @@ const formatDate = (dateString: string) => {
 }
 
 const toggleCustomerStatus = () => {
+  if (!customer.value) return
   const action = customer.value.status === 'blocked' ? 'unblock' : 'block'
-  
   if (confirm(`Are you sure you want to ${action} ${customer.value.name}?`)) {
     toggleStatus(customer.value.id)
   }
 }
 
 const resetPassword = () => {
+  if (!customer.value) return
   if (confirm(`Are you sure you want to reset the password for ${customer.value.name}?`)) {
     alert(`Password reset link has been sent to ${customer.value.email}`)
   }
 }
 
-// Function to fetch customer bookings
+// Function to fetch customer bookings using booking page data only
 const fetchCustomerBookings = async () => {
+  loading.value = true
   try {
-    loading.value = true
-    const response = await customerApi.getCustomerBookings(customerId)
-    
-    if (response.success && response.data) {
-      customerBookings.value = response.data
+    // Use booking page data for history
+    if (customer.value) {
+      customerBookings.value = allBookings.value.filter(booking => {
+        if (!customer.value) return false
+        return booking.customerEmail === customer.value.email || booking.customerName === customer.value.name
+      })
     } else {
-      console.error('Failed to fetch customer bookings:', response.message)
-      // Fallback to all bookings filtered by customer
-      customerBookings.value = allBookings.value.filter(booking => 
-        booking.customerName === customer.value?.name ||
-        booking.customerEmail === customer.value?.email
-      )
+      customerBookings.value = []
     }
   } catch (error) {
-    console.error('Error fetching customer bookings:', error)
-    // Fallback to all bookings filtered by customer
-    customerBookings.value = allBookings.value.filter(booking => 
-      booking.customerName === customer.value?.name ||
-      booking.customerEmail === customer.value?.email
-    )
+    console.error('Error filtering customer bookings:', error)
+    customerBookings.value = []
   } finally {
     loading.value = false
   }

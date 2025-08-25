@@ -820,8 +820,8 @@ const filteredBookings = computed(() => {
       return false
     })
   } else if (activeTab.value === 'subscriptions') {
-    // Show all subscriptions (both active and cancelled) with proper filtering
-    bookings = bookings.filter(b => b.productType === 'Subscription')
+    // Show only subscriptions for registered users
+    bookings = bookings.filter(b => b.productType === 'Subscription' && b.userType === 'registered')
   } else {
     // History tab includes:
     // 1. Past confirmed bookings (before today)

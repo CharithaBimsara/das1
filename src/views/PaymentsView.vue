@@ -35,8 +35,12 @@
       </div>
 
       <!-- Filters: All in one row on desktop -->
-      <div class="bg-white rounded-xl shadow-card p-6">
-  <div class="flex flex-col md:flex-row md:items-end md:space-x-1 gap-4 relative">
+      
+
+      <!-- Payments Table -->
+      <div class="bg-white rounded-xl shadow-card overflow-hidden">
+        <div class="bg-white border-b  shadow-card p-6">
+        <div class="flex flex-col md:flex-row md:items-end md:space-x-1 gap-4 relative">
           <div class="relative md:w-48">
             <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
             <input
@@ -150,9 +154,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Payments Table -->
-      <div class="bg-white rounded-xl shadow-card overflow-hidden">
         
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
@@ -191,35 +192,34 @@
               <tr v-for="payment in sortedPayments" :key="payment.id" class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-medium text-gray-900">{{ payment.bookingId }}</div>
-                  <div class="text-sm text-gray-500">{{ payment.paymentId }}</div>
+                 
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <svg class="w-5 h-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                    <!-- <svg class="w-5 h-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 24 24">
                       <path :d="mdiMapMarker" />
-                    </svg>
+                    </svg> -->
                     <div>
                       <div class="text-sm font-medium text-gray-900">{{ payment.locationName }}</div>
-                      <div class="text-sm text-gray-500">{{ payment.customerName }}</div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ payment.productName }}</div>
+              
                   <div class="text-sm text-gray-500">{{ payment.productType }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div v-if="payment.additionalFacilities.length > 0" class="space-y-1">
                     <div v-for="facility in payment.additionalFacilities" :key="facility.name" class="text-sm">
                       <span class="text-gray-900">{{ facility.name }}</span>
-                      <span class="text-gray-500 ml-2">${{ facility.price }}</span>
+                    
                     </div>
                   </div>
                   <div v-else class="text-sm text-gray-500">No additional facilities</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-semibold text-gray-900">${{ payment.totalAmount }}</div>
-                  <div class="text-sm text-gray-500">Base: ${{ payment.baseAmount }}</div>
+                  
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="text-sm font-semibold text-green-600">${{ payment.commission }}</div>
@@ -234,7 +234,7 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900">{{ formatDate(payment.date) }}</div>
+                  <div class="text-sm text-gray-600">{{ payment.date }}</div>
                   <div class="text-sm text-gray-500">{{ payment.time }}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -246,7 +246,6 @@
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <path :d="mdiEye" />
                     </svg>
-                    <span>View</span>
                   </router-link>
                 </td>
               </tr>
@@ -379,6 +378,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import * as XLSX from 'xlsx'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { 
   mdiCog, 
@@ -543,7 +543,6 @@ const globalSettings = ref({
 const payments = ref([
   {
     id: 'PAY-001',
-    paymentId: 'PM-2024-001',
     bookingId: 'BR-2034',
     customerName: 'John Doe',
     customerEmail: 'john.doe@example.com',
@@ -564,7 +563,6 @@ const payments = ref([
   },
   {
     id: 'PAY-002',
-    paymentId: 'PM-2024-002',
     bookingId: 'BR-2033',
     customerName: 'Jane Smith',
     customerEmail: 'jane.smith@example.com',
@@ -577,14 +575,13 @@ const payments = ref([
     ],
     totalAmount: 60,
     commission: 7.50,
-    commissionRate: 12.5,
+    commissionRate: 10.0,
     status: 'paid',
     date: '2024-08-15',
     time: '2:15 PM'
   },
   {
     id: 'PAY-003',
-    paymentId: 'PM-2024-003',
     bookingId: 'BR-2032',
     customerName: 'Mike Johnson',
     customerEmail: 'mike.johnson@example.com',
@@ -605,7 +602,6 @@ const payments = ref([
   },
   {
     id: 'PAY-004',
-    paymentId: 'PM-2024-004',
     bookingId: 'BR-2031',
     customerName: 'Sarah Wilson',
     customerEmail: 'sarah.wilson@example.com',
@@ -616,14 +612,13 @@ const payments = ref([
     additionalFacilities: [],
     totalAmount: 50,
     commission: 4.00,
-    commissionRate: 8.0,
+    commissionRate: 10.0,
     status: 'paid',
     date: '2024-08-14',
     time: '3:20 PM'
   },
   {
     id: 'PAY-005',
-    paymentId: 'PM-2024-005',
     bookingId: 'BR-2030',
     customerName: 'Robert Davis',
     customerEmail: 'robert.davis@example.com',
@@ -636,7 +631,7 @@ const payments = ref([
     ],
     totalAmount: 180,
     commission: 22.50,
-    commissionRate: 12.5,
+    commissionRate: 10.0,
     status: 'pending',
     date: '2024-08-13',
     time: '11:00 AM'
@@ -764,9 +759,27 @@ const resetFilters = () => {
 }
 
 const exportToExcel = () => {
-  // In a real app, this would generate and download an Excel file
-  console.log('Exporting to Excel...', filteredPayments.value)
-  alert('Excel export functionality would be implemented here!')
+  // Prepare data for Excel
+  const data = filteredPayments.value.map(payment => ({
+    'Booking ID': payment.bookingId,
+    'Location': payment.locationName,
+    'Product': payment.productType,
+    'Additional Facilities': payment.additionalFacilities.map(f => f.name).join(', '),
+    'Total Amount': payment.totalAmount,
+    'PayMedia Commission': payment.commission,
+    'Commission Rate (%)': payment.commissionRate,
+    'Status': payment.status,
+    'Date': payment.date,
+    'Time': payment.time
+  }))
+
+  // Create worksheet and workbook
+  const worksheet = XLSX.utils.json_to_sheet(data)
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Payments')
+
+  // Generate Excel file and trigger download
+  XLSX.writeFile(workbook, 'payments.xlsx')
 }
 
 const saveCommissionSettings = () => {

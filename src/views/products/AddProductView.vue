@@ -17,421 +17,519 @@
 
       <!-- Form Content -->
       <div class="max-w-6xl mx-auto">
-        <form @submit.prevent="saveProduct" class="space-y-6">
-          <!-- Single Card with All Sections -->
-          <div class="bg-white rounded-xl shadow-card overflow-hidden">
-            <div class="p-8 space-y-8">
-              
-              <!-- Location Selection -->
-              <div>
-                <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path :d="mdiOfficeBuilding" />
-                  </svg>
-                  Location
-                </h2>
+        <div v-for="(product, idx) in products" :key="idx" class="mb-8">
+          <form @submit.prevent="saveProduct(idx)" class="space-y-6">
+            <!-- Single Card with All Sections -->
+            <div class="bg-white rounded-xl shadow-card overflow-hidden">
+              <div class="p-8 space-y-8">
                 
+                <!-- Location Selection -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Select Location <span class="text-red-500">*</span>
-                  </label>
-                  <select v-model="form.locationId" required
-                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
-                    <option value="">Choose a location</option>
-                    <option v-for="location in locations" :key="location.id" :value="location.id">
-                      {{ location.name }} - {{ location.address }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Product Details -->
-              <div>
-                <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path :d="mdiPackageVariant" />
-                  </svg>
-                  Product Details
-                </h2>
-                
-                <div class="space-y-6">
-                  <!-- Product Type -->
+                  <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path :d="mdiOfficeBuilding" />
+                    </svg>
+                    Location
+                  </h2>
+                  
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Product Type <span class="text-red-500">*</span>
+                      Select Location <span class="text-red-500">*</span>
                     </label>
-                    <select v-model="form.type" required
-                      @change="onProductTypeChange"
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
-                      <option value="">Select product type</option>
-                      <option value="Meeting Room">Meeting Room</option>
-                      <option value="Hot Desk">Hot Desk</option>
-                      <option value="Dedicated Desk">Dedicated Desk</option>
+                    <select v-model="product.locationId"
+                      :class="[
+                        'w-full border rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                        showValidation[idx] && !product.locationId ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300'
+                      ]"
+                    >
+                      <option value="">Choose a location</option>
+                      <option v-for="location in locations" :key="location.id" :value="location.id">
+                        {{ location.name }} - {{ location.address }}
+                      </option>
                     </select>
+                    <div v-if="showValidation[idx] && !product.locationId" class="mt-1 text-sm text-red-600">
+                      Location is required
+                    </div>
                   </div>
+                </div>
 
-                  <!-- Images Upload -->
-                  <div v-if="form.type">
-                    <label class="block text-sm font-medium text-gray-700 mb-3">
-                      Product Images
-                      <span class="text-xs text-gray-500 font-normal ml-1">(Optional - Add up to 8 images)</span>
-                    </label>
-                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary-400 hover:bg-primary-50/30 transition-all duration-200 group">
-                      <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-primary-100 transition-colors">
-                        <svg class="w-8 h-8 text-gray-400 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                      </div>
-                      <div class="mt-4">
-                        <label for="file-upload" class="cursor-pointer">
-                          <span class="block text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">Click to upload images</span>
-                          <span class="block text-sm text-gray-500 mt-1">or drag and drop files here</span>
-                          <span class="block text-xs text-gray-400 mt-2">PNG, JPG, JPEG • Max 10MB each • Up to 8 images</span>
-                        </label>
-                        <input id="file-upload" name="file-upload" type="file" multiple accept="image/*,image/jpeg,image/png,image/gif" class="sr-only" @change="handleImageUpload" />
+                <!-- Product Details -->
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path :d="mdiPackageVariant" />
+                    </svg>
+                    Product Details
+                  </h2>
+                  
+                  <div class="space-y-6">
+                    <!-- Product Type -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Product Type <span class="text-red-500">*</span>
+                      </label>
+                      <select v-model="product.type"
+                        @change="onProductTypeChange"
+                        :class="[
+                          'w-full border rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                          showValidation[idx] && !product.type ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300'
+                        ]"
+                      >
+                        <option value="">Select product type</option>
+                        <option value="Meeting Room">Meeting Room</option>
+                        <option value="Hot Desk">Hot Desk</option>
+                        <option value="Dedicated Desk">Dedicated Desk</option>
+                      </select>
+                      <div v-if="showValidation[idx] && !product.type" class="mt-1 text-sm text-red-600">
+                        Product type is required
                       </div>
                     </div>
-                    <div v-if="form.images.length > 0" class="mt-6">
-                      <div class="flex items-center justify-between mb-3">
-                        <span class="text-sm font-medium text-gray-700">
-                          Uploaded Images ({{ form.images.length }}/8)
-                        </span>
-                        <button type="button" @click="form.images = []" class="text-sm text-red-600 hover:text-red-700 font-medium">
-                          Clear All
-                        </button>
-                      </div>
-                      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        <div v-for="(image, index) in form.images" :key="index" class="relative group">
-                          <img :src="image" :alt="`Product image ${index + 1}`" 
-                               class="w-full h-32 object-cover rounded-lg border-2 border-gray-200 hover:border-primary-300 transition-all duration-200">
-                          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all duration-200 flex items-center justify-center">
-                            <button type="button" @click="removeImage(index)" 
-                                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg">
-                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                          <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            Image {{ index + 1 }}
-                          </div>
+
+                    <!-- Images Upload -->
+                    <div v-if="product.type">
+                      <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Product Images
+                        <span class="text-xs text-gray-500 font-normal ml-1">(Optional - Add up to 8 images)</span>
+                      </label>
+                      <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary-400 hover:bg-primary-50/30 transition-all duration-200 group">
+                        <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-primary-100 transition-colors">
+                          <svg class="w-8 h-8 text-gray-400 group-hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                        <div class="mt-4">
+                          <label for="file-upload" class="cursor-pointer">
+                            <span class="block text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">Click to upload images</span>
+                            <span class="block text-sm text-gray-500 mt-1">or drag and drop files here</span>
+                            <span class="block text-xs text-gray-400 mt-2">PNG, JPG, JPEG • Max 10MB each • Up to 8 images</span>
+                          </label>
+                          <input id="file-upload" name="file-upload" type="file" multiple accept="image/*,image/jpeg,image/png,image/gif" class="sr-only" @change="handleImageUpload" />
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  <!-- Name and Description -->
-                  <div v-if="form.type" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Product Name <span class="text-red-500">*</span>
-                      </label>
-                      <input type="text" v-model="form.name" required
-                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                        placeholder="Enter product name" />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Max Seating Capacity <span class="text-red-500">*</span>
-                      </label>
-                      <input type="number" v-model.number="form.maxSeatingCapacity" required min="1"
-                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                        placeholder="Enter capacity" />
-                    </div>
-                  </div>
-
-                  <div v-if="form.type">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <textarea v-model="form.description" rows="3"
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                      placeholder="Enter product description"></textarea>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Pricing Section - Dynamic based on product type -->
-              <div v-if="form.type">
-                <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path :d="mdiCurrencyUsd" />
-                  </svg>
-                  Pricing
-                </h2>
-                
-                <!-- Meeting Room Pricing -->
-                <div v-if="form.type === 'Meeting Room'" class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Price per Hour <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                      <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                      <input type="number" v-model.number="form.pricePerHour" required step="0.01" min="0"
-                        class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                        placeholder="0.00" />
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Hot Desk Pricing -->
-                <div v-if="form.type === 'Hot Desk'" class="space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Price per Hour <span class="text-red-500">*</span>
-                      </label>
-                      <div class="relative">
-                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                        <input type="number" v-model.number="form.pricePerHour" required step="0.01" min="0"
-                          class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                          placeholder="0.00" />
-                      </div>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Price per Day <span class="text-red-500">*</span>
-                      </label>
-                      <div class="relative">
-                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                        <input type="number" v-model.number="form.pricePerDay" required step="0.01" min="0"
-                          class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                          placeholder="0.00" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Dedicated Desk Pricing -->
-                <div v-if="form.type === 'Dedicated Desk'" class="space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Price per Month <span class="text-red-500">*</span>
-                      </label>
-                      <div class="relative">
-                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                        <input type="number" v-model.number="form.pricePerMonth" required step="0.01" min="0"
-                          class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                          placeholder="0.00" />
-                      </div>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Price per Year <span class="text-red-500">*</span>
-                      </label>
-                      <div class="relative">
-                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                        <input type="number" v-model.number="form.pricePerYear" required step="0.01" min="0"
-                          class="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900"
-                          placeholder="0.00" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Operating Hours -->
-              <div v-if="form.type">
-                <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path :d="mdiClockOutline" />
-                  </svg>
-                  Open Days & Hours
-                </h2>
-                
-                <div class="space-y-6">
-                  <!-- Open Days -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Open Days <span class="text-red-500">*</span>
-                    </label>
-                    <div class="grid grid-cols-3 md:grid-cols-7 gap-2">
-                      <label v-for="day in daysOfWeek" :key="day" class="flex items-center space-x-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <input type="checkbox" :value="day" v-model="form.openDays" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
-                        <span class="text-sm text-gray-700">{{ day.substring(0, 3) }}</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <!-- Open Hours -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Opening Time <span class="text-red-500">*</span>
-                      </label>
-                      <input type="time" v-model="form.openHours.start" required
-                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900" />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Closing Time <span class="text-red-500">*</span>
-                      </label>
-                      <input type="time" v-model="form.openHours.end" required
-                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Facilities -->
-              <div v-if="form.type">
-                <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path :d="mdiCog" />
-                  </svg>
-                  Facilities
-                </h2>
-                
-                <div class="space-y-6">
-                  <!-- Default Included Facilities -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-3">
-                      Default Included Facilities (Free)
-                      <span class="text-xs text-gray-500 font-normal ml-1">- No additional cost</span>
-                    </label>
-                    <div class="flex items-center justify-start mb-4">
-                      <button type="button" @click="showDefaultFacilityModal = true"
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Add Free Facilities
-                      </button>
-                    </div>
-                    
-                    <!-- Selected Default Facilities as Chips -->
-                    <div v-if="form.defaultFacilities.length > 0" class="mb-4">
-                      <div class="flex items-center justify-between mb-3">
-                        <span class="text-sm text-gray-600">{{ form.defaultFacilities.length }} facilities selected</span>
-                        <button type="button" @click="form.defaultFacilities = []" class="text-xs text-red-600 hover:text-red-700 font-medium">
-                          Clear All
-                        </button>
-                      </div>
-                      <div class="flex flex-wrap gap-2">
-                        <div v-for="(facility, index) in form.defaultFacilities" :key="index"
-                             class="inline-flex items-center bg-gradient-to-r from-green-50 to-green-100 text-green-800 border border-green-200 px-3 py-2 rounded-lg text-sm font-medium hover:from-green-100 hover:to-green-150 transition-all duration-200 group">
-                          <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span>{{ facility }}</span>
-                          <button type="button" @click="removeDefaultFacility(index)"
-                            class="ml-2 text-green-600 hover:text-green-800 hover:bg-green-200 rounded-full p-1 transition-all duration-200">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                      <div v-if="product.images.length > 0" class="mt-6">
+                        <div class="flex items-center justify-between mb-3">
+                          <span class="text-sm font-medium text-gray-700">
+                            Uploaded Images ({{ product.images.length }}/8)
+                          </span>
+                          <button type="button" @click="product.images = []" class="text-sm text-red-600 hover:text-red-700 font-medium">
+                            Clear All
                           </button>
                         </div>
-                      </div>
-                    </div>
-                    
-                    <div v-if="form.defaultFacilities.length === 0" class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50">
-                      <div class="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                      </div>
-                      <p class="text-sm font-medium text-gray-700">No free facilities selected yet</p>
-                      <p class="text-xs text-gray-500 mt-1">Click "Add Free Facilities" to include basic amenities</p>
-                    </div>
-                  </div>
-
-                  <!-- Additional Facilities with Pricing -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-3">
-                      Additional Facilities (Paid)
-                      <span class="text-xs text-gray-500 font-normal ml-1">- Premium add-ons with pricing</span>
-                    </label>
-                    <div class="flex items-center justify-start mb-4">
-                      <button type="button" @click="showAdditionalFacilityModal = true"
-                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                        </svg>
-                        Add Premium Facilities
-                      </button>
-                    </div>
-                    
-                    <!-- Selected Additional Facilities as Chips -->
-                    <div v-if="form.additionalFacilities.length > 0" class="mb-4">
-                      <div class="flex items-center justify-between mb-3">
-                        <span class="text-sm text-gray-600">{{ form.additionalFacilities.length }} premium facilities selected</span>
-                        <button type="button" @click="form.additionalFacilities = []" class="text-xs text-red-600 hover:text-red-700 font-medium">
-                          Clear All
-                        </button>
-                      </div>
-                      <div class="space-y-2">
-                        <div v-for="(facility, index) in form.additionalFacilities" :key="index"
-                             class="inline-flex items-center bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900 border border-blue-200 px-4 py-3 rounded-lg text-sm font-medium mr-2 mb-2 hover:from-blue-100 hover:to-blue-150 transition-all duration-200 group">
-                          <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                          </svg>
-                          <span class="font-semibold">{{ facility.name }}</span>
-                          <span class="mx-2 text-blue-400">•</span>
-                          <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-xs font-bold">${{ facility.pricePerHour }}/hr</span>
-                          <button type="button" @click="removeAdditionalFacility(index)"
-                            class="ml-3 text-blue-600 hover:text-blue-800 hover:bg-blue-200 rounded-full p-1 transition-all duration-200">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                          <!-- Price input for selected facilities -->
-                          <div class="ml-6">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Price per Hour</label>
-                            <div class="relative">
-                              <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                              <input type="number"
-                                     v-model.number="facility.pricePerHour"
-                                     step="0.01" min="0"
-                                     class="w-24 border border-gray-300 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                                     placeholder="0.00" />
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          <div v-for="(image, index) in product.images" :key="index" class="relative group">
+                            <img :src="image" :alt="`Product image ${index + 1}`" 
+                                 class="w-full h-32 object-cover rounded-lg border-2 border-gray-200 hover:border-primary-300 transition-all duration-200">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg transition-all duration-200 flex items-center justify-center">
+                              <button type="button" @click="removeImage(index)" 
+                                      class="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                            <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              Image {{ index + 1 }}
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
-                    <div v-if="form.additionalFacilities.length === 0" class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50">
-                      <div class="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                        </svg>
+
+                    <!-- Name and Description -->
+                    <div v-if="product.type" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          Product Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" v-model="product.name"
+                          :class="[
+                            'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                            showValidation[idx] && !product.name.trim() ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300'
+                          ]"
+                          placeholder="Enter product name" />
+                        <div v-if="showValidation[idx] && !product.name.trim()" class="mt-1 text-sm text-red-600">
+                          Product name is required
+                        </div>
                       </div>
-                      <p class="text-sm font-medium text-gray-700">No premium facilities selected</p>
-                      <p class="text-xs text-gray-500 mt-1">Click "Add Premium Facilities" to include paid amenities</p>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          Max Seating Capacity <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" v-model.number="product.maxSeatingCapacity" min="1"
+                          :class="[
+                            'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                            showValidation[idx] && (!product.maxSeatingCapacity || product.maxSeatingCapacity < 1) ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300'
+                          ]"
+                          placeholder="Enter capacity" />
+                        <div v-if="showValidation[idx] && (!product.maxSeatingCapacity || product.maxSeatingCapacity < 1)" class="mt-1 text-sm text-red-600">
+                          Max seating capacity is required
+                        </div>
+                      </div>
+                    </div>
+                      <div v-if="product.type">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          Description <span class="text-red-500">*</span>
+                        </label>
+                        <textarea v-model="product.description" rows="3"
+                          :class="[
+                            'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                            showValidation[idx] && !product.description.trim() ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300'
+                          ]"
+                          placeholder="Enter product description"></textarea>
+                        <div v-if="showValidation[idx] && !product.description.trim()" class="mt-1 text-sm text-red-600">
+                          Description is required
+                        </div>
+                      </div>
+
+                  </div>
+                </div>
+
+                <!-- Pricing Section - Dynamic based on product type -->
+                <div v-if="product.type">
+                  <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path :d="mdiCurrencyUsd" />
+                    </svg>
+                    Pricing
+                  </h2>
+                  
+                  <!-- Meeting Room Pricing -->
+                  <div v-if="product.type === 'Meeting Room'" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Price per Hour <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute left-3 top-6 transform -translate-y-1/2 text-gray-500">$</span>
+                        <input type="number" v-model.number="product.pricePerHour" step="0.01" min="0"
+                          :class="[
+                            'w-full rounded-lg pl-8 pr-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                            showValidation[idx] && product.type === 'Meeting Room' && product.pricePerHour <= 0 ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300'
+                          ]"
+                          placeholder="0.00" />
+                        <div v-if="showValidation[idx] && product.type === 'Meeting Room' && product.pricePerHour <= 0" class="mt-1 text-sm text-red-600">
+                          Price per hour is required
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hot Desk Pricing -->
+                  <div v-if="product.type === 'Hot Desk'" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Pricing Type <span class="text-red-500">*</span>
+                      </label>
+                      <select v-model="hotDeskPricingType"
+                        class="w-full border rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors border-gray-300">
+                        <option value="hour">Per Hour</option>
+                        <option value="day">Per Day</option>
+                      </select>
+                    </div>
+                    <div v-if="hotDeskPricingType === 'hour'">
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Price per Hour <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        <input type="number" v-model.number="product.pricePerHour" step="0.01" min="0"
+                          :class="['w-full border rounded-lg pl-8 pr-4 py-3 focus:ring-2 text-gray-900 transition-colors', showValidation[idx] && product.pricePerHour <= 0 ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300']"
+                          placeholder="0.00" />
+                        <div v-if="showValidation[idx] && product.pricePerHour <= 0" class="mt-1 text-sm text-red-600">
+                          Price per hour is required
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="hotDeskPricingType === 'day'">
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Price per Day <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        <input type="number" v-model.number="product.pricePerDay" step="0.01" min="0"
+                          :class="['w-full border rounded-lg pl-8 pr-4 py-3 focus:ring-2 text-gray-900 transition-colors', showValidation[idx] && product.pricePerDay <= 0 ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300']"
+                          placeholder="0.00" />
+                        <div v-if="showValidation[idx] && product.pricePerDay <= 0" class="mt-1 text-sm text-red-600">
+                          Price per day is required
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Dedicated Desk Pricing -->
+                  <div v-if="product.type === 'Dedicated Desk'" class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Pricing Type <span class="text-red-500">*</span>
+                      </label>
+                      <select v-model="dedicatedDeskPricingType"
+                        class="w-full border rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors border-gray-300">
+                        <option value="month">Per Month</option>
+                        <option value="year">Per Year</option>
+                      </select>
+                    </div>
+                    <div v-if="dedicatedDeskPricingType === 'month'">
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Price per Month <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        <input type="number" v-model.number="product.pricePerMonth" step="0.01" min="0"
+                          :class="['w-full border rounded-lg pl-8 pr-4 py-3 focus:ring-2 text-gray-900 transition-colors', showValidation[idx] && product.pricePerMonth <= 0 ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300']"
+                          placeholder="0.00" />
+                        <div v-if="showValidation[idx] && product.pricePerMonth <= 0" class="mt-1 text-sm text-red-600">
+                          Price per month is required
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="dedicatedDeskPricingType === 'year'">
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Price per Year <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        <input type="number" v-model.number="product.pricePerYear" step="0.01" min="0"
+                          :class="['w-full border rounded-lg pl-8 pr-4 py-3 focus:ring-2 text-gray-900 transition-colors', showValidation[idx] && product.pricePerYear <= 0 ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300']"
+                          placeholder="0.00" />
+                        <div v-if="showValidation[idx] && product.pricePerYear <= 0" class="mt-1 text-sm text-red-600">
+                          Price per year is required
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Operating Hours -->
+                <div v-if="product.type">
+                  <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path :d="mdiClockOutline" />
+                    </svg>
+                    Open Days & Hours
+                  </h2>
+                  
+                  <div class="space-y-6">
+                    <!-- Open Days -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Open Days <span class="text-red-500">*</span>
+                      </label>
+                      <div
+                        :class="[
+                          'grid grid-cols-3 md:grid-cols-7 gap-2',
+                          showValidation[idx] && product.openDays.length === 0 ? 'border-2 border-red-500 rounded-lg p-2' : ''
+                        ]"
+                      >
+                        <label v-for="day in daysOfWeek" :key="day" class="flex items-center space-x-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input type="checkbox" :value="day" v-model="product.openDays" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                          <span class="text-sm text-gray-700">{{ day.substring(0, 3) }}</span>
+                        </label>
+                      </div>
+                      <div v-if="showValidation[idx] && product.openDays.length === 0" class="mt-1 text-sm text-red-600">
+                        At least one open day is required
+                      </div>
+                    </div>
+
+                    <!-- Open Hours -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          Opening Time <span class="text-red-500">*</span>
+                        </label>
+                        <input type="time" v-model="product.openHours.start"
+                          :class="[
+                            'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                            showValidation[idx] && !product.openHours.start ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300'
+                          ]"
+                          placeholder="Start time" />
+                        <div v-if="showValidation[idx] && !product.openHours.start" class="mt-1 text-sm text-red-600">
+                          Start time is required
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          Closing Time <span class="text-red-500">*</span>
+                        </label>
+                        <input type="time" v-model="product.openHours.end"
+                          :class="[
+                            'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
+                            showValidation[idx] && !product.openHours.end ? 'border-2 border-red-500 ring-red-500 focus:ring-red-500' : 'border border-gray-300'
+                          ]"
+                          placeholder="End time" />
+                        <div v-if="showValidation[idx] && !product.openHours.end" class="mt-1 text-sm text-red-600">
+                          End time is required
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Facilities -->
+                <div v-if="product.type">
+                  <h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                    <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24">
+                      <path :d="mdiCog" />
+                    </svg>
+                    Facilities
+                  </h2>
+                  
+                  <div class="space-y-6">
+                    <!-- Default Included Facilities -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Default Included Facilities (Free)
+                        <span class="text-xs text-gray-500 font-normal ml-1">- No additional cost</span>
+                      </label>
+                      <div class="flex items-center justify-start mb-4">
+                        <button type="button" @click="showDefaultFacilityModal = true"
+                          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          Add Free Facilities
+                        </button>
+                      </div>
+                      
+                      <!-- Selected Default Facilities as Chips -->
+                      <div v-if="product.defaultFacilities.length > 0" class="mb-4">
+                        <div class="flex items-center justify-between mb-3">
+                          <span class="text-sm text-gray-600">{{ product.defaultFacilities.length }} facilities selected</span>
+                          <button type="button" @click="product.defaultFacilities = []" class="text-xs text-red-600 hover:text-red-700 font-medium">
+                            Clear All
+                          </button>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                          <div v-for="(facility, index) in product.defaultFacilities" :key="index"
+                               class="inline-flex items-center bg-gradient-to-r from-green-50 to-green-100 text-green-800 border border-green-200 px-3 py-2 rounded-lg text-sm font-medium hover:from-green-100 hover:to-green-150 transition-all duration-200 group">
+                            <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>{{ facility }}</span>
+                            <button type="button" @click="removeDefaultFacility(index)"
+                              class="ml-2 text-green-600 hover:text-green-800 hover:bg-green-200 rounded-full p-1 transition-all duration-200">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div v-if="product.defaultFacilities.length === 0" class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50">
+                        <div class="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
+                          <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                        </div>
+                        <p class="text-sm font-medium text-gray-700">No free facilities selected yet</p>
+                        <p class="text-xs text-gray-500 mt-1">Click "Add Free Facilities" to include basic amenities</p>
+                      </div>
+                    </div>
+
+                    <!-- Additional Facilities with Pricing -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-3">
+                        Additional Facilities (Paid)
+                        <span class="text-xs text-gray-500 font-normal ml-1">- Premium add-ons with pricing</span>
+                      </label>
+                      <div class="flex items-center justify-start mb-4">
+                        <button type="button" @click="showAdditionalFacilityModal = true"
+                          class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                          Add Premium Facilities
+                        </button>
+                      </div>
+                      
+                      <!-- Selected Additional Facilities as Chips -->
+                      <div v-if="product.additionalFacilities.length > 0" class="mb-4">
+                        <div class="flex items-center justify-between mb-3">
+                          <span class="text-sm text-gray-600">{{ product.additionalFacilities.length }} premium facilities selected</span>
+                          <button type="button" @click="product.additionalFacilities = []" class="text-xs text-red-600 hover:text-red-700 font-medium">
+                            Clear All
+                          </button>
+                        </div>
+                        <div class="space-y-2">
+                          <div v-for="(facility, index) in product.additionalFacilities" :key="index"
+                               class="inline-flex items-center bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900 border border-blue-200 px-4 py-3 rounded-lg text-sm font-medium mr-2 mb-2 hover:from-blue-100 hover:to-blue-150 transition-all duration-200 group">
+                            <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                            <span class="font-semibold">{{ facility.name }}</span>
+                            <span class="mx-2 text-blue-400">•</span>
+                            <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-xs font-bold">${{ facility.pricePerHour }}/hr</span>
+                            
+                            <!-- Price input for selected facilities -->
+                            <div class="ml-6">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Price per Hour</label>
+                              <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                <input type="number"
+                                       v-model.number="facility.pricePerHour"
+                                       step="0.01" min="0"
+                                       class="w-24 border border-gray-300 rounded-lg pl-8 pr-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                                       placeholder="0.00" />
+                              </div>
+                            </div>
+                            <button type="button" @click="removeAdditionalFacility(index)"
+                              class="ml-3 text-blue-600 hover:text-blue-800 hover:bg-blue-200 rounded-full p-1 transition-all duration-200">
+                              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div v-if="product.additionalFacilities.length === 0" class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50">
+                        <div class="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                          <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        </div>
+                        <p class="text-sm font-medium text-gray-700">No premium facilities selected</p>
+                        <p class="text-xs text-gray-500 mt-1">Click "Add Premium Facilities" to include paid amenities</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Action Buttons -->
-          <div class="flex justify-between items-center pt-8 border-t border-gray-200">
-            <button type="button" @click="addAnotherProduct"
-              class="px-6 py-3 border-2 border-primary-600 text-primary-600 rounded-xl hover:bg-primary-50 hover:border-primary-700 transition-all duration-200 flex items-center space-x-3 font-medium shadow-sm hover:shadow-md">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Add Another Product</span>
-            </button>
-            
-            <div class="flex space-x-4">
-              <router-link to="/products"
-                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium shadow-sm hover:shadow-md">
-                Cancel
-              </router-link>
-              <button type="submit" :disabled="!isFormValid"
-                class="px-8 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-xl hover:from-primary-600 hover:to-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-primary-500 disabled:hover:to-primary-600 flex items-center space-x-3 font-semibold shadow-lg hover:shadow-xl">
+            <!-- Action Buttons for each form -->
+            <div class="flex items-center justify-between pt-8 border-t border-gray-200">
+              <!-- Left side: Add Another Product -->
+              <button type="button" @click="addAnotherProduct"
+                class="px-6 py-3 border-2 border-primary-600 text-primary-600 rounded-xl hover:bg-primary-50 hover:border-primary-700 transition-all duration-200 flex items-center space-x-3 font-medium shadow-sm hover:shadow-md">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Create Product</span>
+                <span>Add Another Product</span>
               </button>
+              <!-- Right side: Create Product and Cancel -->
+              <div class="flex items-center gap-4">
+                <button type="submit"
+                  class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Create Product</span>
+                </button>
+                <div v-if="products.length > 1 && idx > 0" class="flex items-center">
+                  <button type="button" @click="removeProductForm(idx)"
+                    class="px-6 py-3 border-2 border-red-600 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-700 transition-all duration-200 flex items-center space-x-3 font-medium shadow-sm hover:shadow-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Cancel</span>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
+  <!-- Removed standalone Add Another Product button, now inline with Create Product -->
       </div>
     </div>
 
@@ -451,7 +549,7 @@
           <div v-for="facility in availableFacilities" :key="facility.id" 
                class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
             <input type="checkbox" :id="`default-${facility.id}`" 
-                   :checked="form.defaultFacilities.includes(facility.name)"
+                   :checked="products[0].defaultFacilities.includes(facility.name)"
                    @change="toggleDefaultFacility(facility.name)"
                    class="rounded border-gray-300 text-green-600 focus:ring-green-500">
             <label :for="`default-${facility.id}`" class="flex-1 cursor-pointer">
@@ -487,7 +585,7 @@
                class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
             <div class="flex items-start space-x-3">
               <input type="checkbox" :id="`additional-${facility.id}`" 
-                     :checked="form.additionalFacilities.some(f => f.name === facility.name)"
+                     :checked="products[0].additionalFacilities.some(f => f.name === facility.name)"
                      @change="toggleAdditionalFacility(facility)"
                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1">
               <div class="flex-1">
@@ -497,7 +595,7 @@
                 </label>
                 
                 <!-- Price input for selected facilities -->
-                <div v-if="form.additionalFacilities.some(f => f.name === facility.name)" class="mt-2">
+                <div v-if="products[0].additionalFacilities.some(f => f.name === facility.name)" class="mt-2">
                   <label class="block text-sm font-medium text-gray-700 mb-1">Price per Hour</label>
                   <div class="relative">
                     <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
@@ -526,6 +624,8 @@
 </template>
 
 <script setup lang="ts">
+// Dedicated Desk pricing type selection
+const dedicatedDeskPricingType = ref('month')
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
@@ -569,51 +669,66 @@ const showDefaultFacilityModal = ref(false)
 const showAdditionalFacilityModal = ref(false)
 
 // Form data
-const form = ref({
-  locationId: '',
-  type: '',
-  images: [] as string[],
-  name: '',
-  description: '',
-  maxSeatingCapacity: 1,
-  pricePerHour: 0,
-  pricePerDay: 0,
-  pricePerMonth: 0,
-  pricePerYear: 0,
-  openDays: [] as string[],
-  openHours: {
-    start: '09:00',
-    end: '17:00'
-  },
-  defaultFacilities: [] as string[],
-  additionalFacilities: [] as Array<{
-    name: string
-    pricePerHour: number
-  }>,
-  status: 'active'
-})
+const products = ref([
+  {
+    locationId: '',
+    type: '',
+    images: [] as string[],
+    name: '',
+    description: '',
+    maxSeatingCapacity: 1,
+    pricePerHour: 0,
+    pricePerDay: 0,
+    pricePerWeek: 0,
+    pricePerMonth: 0,
+    pricePerYear: 0,
+    openDays: [] as string[],
+    openHours: {
+      start: '09:00',
+      end: '17:00'
+    },
+    defaultFacilities: [] as string[],
+    additionalFacilities: [] as Array<{
+      name: string
+      pricePerHour: number
+    }>,
+    status: 'active'
+  }
+])
+
+// Hot Desk pricing type selection
+const hotDeskPricingType = ref('hour')
+
+// Per-form validation state
+const showValidation = ref([false])
 
 // Computed properties
 const isFormValid = computed(() => {
-  const basicValidation = form.value.locationId && 
-                         form.value.type && 
-                         form.value.name.trim() && 
-                         form.value.maxSeatingCapacity > 0 &&
-                         form.value.openDays.length > 0
+  const basicValidation = products.value.every(product => 
+    product.locationId && 
+    product.type && 
+    product.name.trim() && 
+    product.maxSeatingCapacity > 0 &&
+    product.openHours.start &&
+    product.openHours.end &&
+    product.openDays.length > 0
+  )
 
   if (!basicValidation) return false
 
   // Type-specific pricing validation
-  switch (form.value.type) {
-    case 'Meeting Room':
-      return form.value.pricePerHour > 0
-    case 'Hot Desk':
-      return form.value.pricePerHour > 0 && form.value.pricePerDay > 0
-    case 'Dedicated Desk':
-      return form.value.pricePerMonth > 0 && form.value.pricePerYear > 0
-    default:
-      return false
-  }
+  return products.value.every(product => {
+    switch (product.type) {
+      case 'Meeting Room':
+        return product.pricePerHour > 0
+      case 'Hot Desk':
+        return product.pricePerHour > 0 && product.pricePerDay > 0
+      case 'Dedicated Desk':
+        return product.pricePerMonth > 0 && product.pricePerYear > 0
+      default:
+        return false
+    }
+  })
 })
 
 // Watchers - Remove company watcher since we removed company selection
@@ -624,10 +739,19 @@ const onCompanyChange = () => {
 
 const onProductTypeChange = () => {
   // Reset pricing fields when product type changes
-  form.value.pricePerHour = 0
-  form.value.pricePerDay = 0
-  form.value.pricePerMonth = 0
-  form.value.pricePerYear = 0
+  products.value.forEach(product => {
+    product.pricePerHour = 0
+    product.pricePerDay = 0
+    product.pricePerWeek = 0
+    product.pricePerMonth = 0
+    product.pricePerYear = 0
+  })
+  if (products.value[0].type === 'Hot Desk') {
+    hotDeskPricingType.value = 'hour'
+  }
+  if (products.value[0].type === 'Dedicated Desk') {
+    dedicatedDeskPricingType.value = 'month'
+  }
 }
 
 const handleImageUpload = (event: any) => {
@@ -638,7 +762,7 @@ const handleImageUpload = (event: any) => {
       const reader = new FileReader()
       reader.onload = (e) => {
         if (e.target?.result) {
-          form.value.images.push(e.target.result as string)
+          products.value[0].images.push(e.target.result as string)
         }
       }
       reader.readAsDataURL(file)
@@ -647,30 +771,30 @@ const handleImageUpload = (event: any) => {
 }
 
 const removeImage = (index: number) => {
-  form.value.images.splice(index, 1)
+  products.value[0].images.splice(index, 1)
 }
 
 // Default facility methods
 const toggleDefaultFacility = (facilityName: string) => {
-  const index = form.value.defaultFacilities.indexOf(facilityName)
+  const index = products.value[0].defaultFacilities.indexOf(facilityName)
   if (index > -1) {
-    form.value.defaultFacilities.splice(index, 1)
+    products.value[0].defaultFacilities.splice(index, 1)
   } else {
-    form.value.defaultFacilities.push(facilityName)
+    products.value[0].defaultFacilities.push(facilityName)
   }
 }
 
 const removeDefaultFacility = (index: number) => {
-  form.value.defaultFacilities.splice(index, 1)
+  products.value[0].defaultFacilities.splice(index, 1)
 }
 
 // Additional facility methods
 const toggleAdditionalFacility = (facility: any) => {
-  const existingIndex = form.value.additionalFacilities.findIndex(f => f.name === facility.name)
+  const existingIndex = products.value[0].additionalFacilities.findIndex(f => f.name === facility.name)
   if (existingIndex > -1) {
-    form.value.additionalFacilities.splice(existingIndex, 1)
+    products.value[0].additionalFacilities.splice(existingIndex, 1)
   } else {
-    form.value.additionalFacilities.push({
+    products.value[0].additionalFacilities.push({
       name: facility.name,
       pricePerHour: 0
     })
@@ -678,71 +802,139 @@ const toggleAdditionalFacility = (facility: any) => {
 }
 
 const removeAdditionalFacility = (index: number) => {
-  form.value.additionalFacilities.splice(index, 1)
+  products.value[0].additionalFacilities.splice(index, 1)
 }
 
 const getAdditionalFacilityPrice = (facilityName: string) => {
-  const facility = form.value.additionalFacilities.find(f => f.name === facilityName)
+  const facility = products.value[0].additionalFacilities.find(f => f.name === facilityName)
   return facility ? facility.pricePerHour : 0
 }
 
 const updateAdditionalFacilityPrice = (facilityName: string, event: any) => {
-  const facility = form.value.additionalFacilities.find(f => f.name === facilityName)
+  const facility = products.value[0].additionalFacilities.find(f => f.name === facilityName)
   if (facility) {
     facility.pricePerHour = parseFloat(event.target.value) || 0
   }
 }
 
 const resetForm = () => {
-  form.value = {
+  products.value = [{
     locationId: '',
     type: '',
-    images: [],
+    images: [] as string[],
     name: '',
     description: '',
     maxSeatingCapacity: 1,
     pricePerHour: 0,
     pricePerDay: 0,
+    pricePerWeek: 0,
     pricePerMonth: 0,
     pricePerYear: 0,
-    openDays: [],
+    openDays: [] as string[],
     openHours: {
       start: '09:00',
       end: '17:00'
     },
-    defaultFacilities: [],
-    additionalFacilities: [],
+    defaultFacilities: [] as string[],
+    additionalFacilities: [] as Array<{
+      name: string
+      pricePerHour: number
+    }>,
     status: 'active'
-  }
+  }]
+  hotDeskPricingType.value = 'hour'
+  dedicatedDeskPricingType.value = 'month'
 }
 
 const addAnotherProduct = () => {
-  if (confirm('This will clear the current form. Are you sure you want to add another product?')) {
-    resetForm()
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+  products.value.push({
+    locationId: '',
+    type: '',
+    images: [] as string[],
+    name: '',
+    description: '',
+    maxSeatingCapacity: 1,
+    pricePerHour: 0,
+    pricePerDay: 0,
+    pricePerWeek: 0,
+    pricePerMonth: 0,
+    pricePerYear: 0,
+    openDays: [] as string[],
+    openHours: {
+      start: '09:00',
+      end: '17:00'
+    },
+    defaultFacilities: [] as string[],
+    additionalFacilities: [] as Array<{
+      name: string
+      pricePerHour: number
+    }>,
+    status: 'active'
+  })
+  showValidation.value.push(false)
+}
+
+const removeProductForm = (index: number) => {
+  if (products.value.length > 1) {
+    products.value.splice(index, 1)
+    showValidation.value.splice(index, 1)
   }
 }
 
-const saveProduct = () => {
-  if (!isFormValid.value) {
-    alert('Please fill in all required fields')
+const saveProduct = (idx: number) => {
+  // Validate single product form
+  const product = products.value[idx]
+  showValidation.value[idx] = true;
+  const basicValidation = product.locationId && 
+    product.type && 
+    product.name.trim() && 
+    product.maxSeatingCapacity > 0 &&
+    product.openHours.start &&
+    product.openHours.end &&
+    product.openDays.length > 0
+  let valid = basicValidation
+  if (valid) {
+    switch (product.type) {
+      case 'Meeting Room':
+        valid = product.pricePerHour > 0
+        break
+      case 'Hot Desk':
+        valid = product.pricePerHour > 0 && product.pricePerDay > 0
+        break
+      case 'Dedicated Desk':
+        valid = product.pricePerMonth > 0 && product.pricePerYear > 0
+        break
+      default:
+        valid = false
+    }
+  }
+  if (!valid) {
+    // Do not show alert, just show red borders via showValidation
     return
   }
-
   // Here you would typically send the data to your API
-  console.log('Creating product:', form.value)
-  
-  // Show success message
+  console.log('Creating product:', product)
   alert('Product created successfully!')
-  
-  // Navigate back to products list
-  router.push('/products')
+  // Optionally remove the form after creation
+  // removeProductForm(idx)
 }
+// ...existing code...
 </script>
 
 <style scoped>
 .shadow-card {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Hide main horizontal scrollbar and prevent horizontal overflow */
+.max-w-6xl {
+  overflow-x: hidden;
+}
+html, body {
+  overflow-x: hidden;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none;
 }
 
 /* Modal backdrop blur effect */

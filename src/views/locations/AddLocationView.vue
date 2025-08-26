@@ -75,20 +75,7 @@
                       Map URL is required
                     </div>
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Location <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" v-model="form.location"
-                      :class="[
-                        'w-full rounded-lg px-4 py-3 focus:ring-2 text-gray-900 transition-colors',
-                        showValidation && !form.location.trim() ? 'border-red-500 ring-red-500 focus:ring-red-500 border-2' : 'border-gray-300 border'
-                      ]"
-                      placeholder="City, State/Province" />
-                    <div v-if="showValidation && !form.location.trim()" class="mt-1 text-sm text-red-600">
-                      Location is required
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
 

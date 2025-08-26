@@ -181,7 +181,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {{ activeTab === 'subscriptions' ? 'Subscribed Date' : 'Date & Time' }}
                 </th>
-                <th v-if="activeTab !== 'subscriptions'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th v-if="activeTab !== 'subscriptions' && activeTab !== 'history'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Duration
                 </th>
                 <th v-if="activeTab !== 'subscriptions'" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -204,7 +204,18 @@
             <tbody class="bg-white divide-y divide-gray-200">
               <tr v-for="booking in paginatedBookings" :key="booking.id" class="hover:bg-gray-50">
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm font-medium text-gray-900">{{ booking.id }}</div>
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-8 w-8">
+                      <div class="h-8 w-8 rounded-lg bg-primary-100 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path :d="mdiCalendar" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <div class="text-sm font-medium text-gray-900">{{ booking.id }}</div>
+                    </div>
+                  </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
@@ -230,7 +241,7 @@
                     <div class="text-sm text-gray-500">{{ booking.startTime }} - {{ booking.endTime }}</div>
                   </div>
                 </td>
-                <td v-if="activeTab !== 'subscriptions'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td v-if="activeTab !== 'subscriptions' && activeTab !== 'history'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {{ booking.duration }}
                 </td>
                 <td v-if="activeTab !== 'subscriptions'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -300,7 +311,7 @@
         </div>
 
         <!-- Pagination -->
-        <!-- <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
           <div class="flex items-center justify-between">
             <div class="flex-1 flex justify-between sm:hidden">
               <button @click="previousPage" :disabled="currentPage === 1"
@@ -348,7 +359,7 @@
               </div>
             </div>
           </div>
-        </div> -->
+        </div>
 
         <!-- Empty State -->
         <div v-if="filteredBookings.length === 0" class="text-center py-12">
@@ -414,7 +425,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
-import { mdiEye, mdiPencil, mdiDelete, mdiCancel } from '@mdi/js'
+import { mdiEye, mdiPencil, mdiDelete, mdiCancel, mdiCalendar } from '@mdi/js'
 
 // Router
 const route = useRoute()
@@ -820,8 +831,8 @@ const filteredBookings = computed(() => {
       return false
     })
   } else if (activeTab.value === 'subscriptions') {
-    // Show only subscriptions for registered users
-    bookings = bookings.filter(b => b.productType === 'Subscription' && b.userType === 'registered')
+    // Show only active (not cancelled) subscriptions
+    bookings = bookings.filter(b => b.productType === 'Subscription' && b.status !== 'cancelled')
   } else {
     // History tab includes:
     // 1. Past confirmed bookings (before today)
@@ -1047,8 +1058,8 @@ const getTabCount = (tabId: string) => {
       b.date >= todayStr
     ).length
   } else if (tabId === 'subscriptions') {
-    // Count all subscriptions (active and cancelled will be shown in subscriptions tab)
-    return allBookings.value.filter(b => b.productType === 'Subscription').length
+    // Count only current (active) subscriptions, not cancelled ones
+    return allBookings.value.filter(b => b.productType === 'Subscription' && b.status === 'confirmed').length
   } else {
     // History includes:
     // 1. Past confirmed bookings (before today)

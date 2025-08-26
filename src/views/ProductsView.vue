@@ -24,7 +24,7 @@
       <!-- Search and Filters -->
       <div class="bg-white rounded-xl shadow-card p-6">
         
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
           <div class="md:col-span-1">
             <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <div class="relative">
@@ -45,6 +45,13 @@
               <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+            <select v-model="filters.location" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-black">
+              <option value="">All Locations</option>
+              <option v-for="loc in availableLocations" :key="loc" :value="loc">{{ loc }}</option>
             </select>
           </div>
           <div>
@@ -221,7 +228,15 @@ const isDeleting = ref(false)
 // Filters
 const filters = ref({
   status: '',
-  productType: ''
+  productType: '',
+  location: ''
+})
+
+// Available locations (derived from sample data)
+const availableLocations = computed(() => {
+  const set = new Set<string>()
+  products.value.forEach(p => set.add(p.locationName))
+  return Array.from(set)
 })
 
 // Sample data
@@ -321,6 +336,11 @@ const filteredProducts = computed(() => {
     filtered = filtered.filter(product => product.type === filters.value.productType)
   }
 
+  // Location filter
+  if (filters.value.location) {
+    filtered = filtered.filter(product => product.locationName === filters.value.location)
+  }
+
   return filtered
 })
 
@@ -396,7 +416,8 @@ const resetFilters = () => {
   searchQuery.value = ''
   filters.value = {
     status: '',
-    productType: ''
+  productType: '',
+  location: ''
   }
 }
 </script>

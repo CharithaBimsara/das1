@@ -148,7 +148,7 @@
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h2 class="text-lg font-semibold text-gray-900">Booking History</h2>
           <div class="flex items-center space-x-3">
-            <select v-model="bookingFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+            <select v-model="bookingFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900">
               <option value="">All Bookings</option>
               <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
@@ -200,17 +200,18 @@
                   <div class="text-sm text-gray-900">{{ formatDate(booking.date) }}</div>
                   <div class="text-sm text-gray-500">{{ booking.startTime }} - {{ booking.endTime }}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-8 w-8">
-                      <img class="h-8 w-8 rounded object-cover" :src="booking.productImage" :alt="booking.productName">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-8 w-8">
+                        <img class="h-8 w-8 rounded object-cover" :src="booking.productImage" :alt="booking.productName">
+                      </div>
+                      <div class="ml-3">
+                        <div class="text-sm font-medium text-gray-900">
+                          {{ booking.productType === 'Subscription' ? 'Dedicated Desk' : booking.productType }}
+                        </div>
+                      </div>
                     </div>
-                    <div class="ml-3">
-                      <div class="text-sm font-medium text-gray-900">{{ booking.productName }}</div>
-                      <div class="text-sm text-gray-500">{{ booking.locationName }}</div>
-                    </div>
-                  </div>
-                </td>
+                  </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {{ booking.duration }}
                 </td>

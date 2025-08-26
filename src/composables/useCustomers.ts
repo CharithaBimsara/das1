@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 
 // Sample customers data - this will be shared across components
-const customersData = ref([
+export const customersData = ref([
   {
     id: 'CU-001',
     name: 'John Doe',

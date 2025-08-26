@@ -30,12 +30,8 @@
               </h2>
               
               <!-- Information Grid -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Facility ID</label>
-                    <div class="text-lg font-semibold text-gray-900">{{ facility.id }}</div>
-                  </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Facility Name</label>
                     <div class="text-lg font-semibold text-gray-900">{{ facility.name }}</div>
@@ -48,11 +44,11 @@
                       {{ facility.status }}
                     </span>
                   </div>
-                  <div>
+                </div>
+                 <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Created Date</label>
                     <div class="text-lg text-gray-900">{{ formatDate(facility.createdAt) }}</div>
                   </div>
-                </div>
               </div>
             </div>
             

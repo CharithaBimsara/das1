@@ -34,14 +34,6 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Facility ID
-                    </label>
-                    <input type="text" v-model="form.id" disabled
-                      class="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 text-gray-500 cursor-not-allowed"
-                      placeholder="Facility ID" />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
                       Facility Name <span class="text-red-500">*</span>
                     </label>
                     <input type="text" v-model="form.name" required

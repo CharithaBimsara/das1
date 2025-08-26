@@ -175,7 +175,7 @@
                 v-model="cancellationForm.reason"
                 rows="4"
                 required
-                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm text-gray-900"
                 placeholder="Please provide the reason for cancellation..."
               ></textarea>
             </div>
@@ -235,29 +235,31 @@
               <div class="space-y-4">
                 <div class="text-sm text-gray-700">Notifications will be sent to the customer's contact below. Choose which channels to use.</div>
 
-                <label class="flex items-start space-x-3">
+                <!-- Email Notification -->
+                <div class="flex items-center bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-100">
                   <input
                     type="checkbox"
                     v-model="cancellationForm.notifyEmail"
-                    class="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 mr-3"
                   />
-                  <div class="flex-1">
+                  <div>
                     <div class="text-sm font-medium text-gray-900">Email</div>
-                    <div class="text-xs text-gray-600 mt-1">{{ subscription?.customerEmail || 'No email available' }}</div>
+                    <div class="text-xs text-gray-600">{{ subscription?.customerEmail || 'No email available' }}</div>
                   </div>
-                </label>
+                </div>
 
-                <label class="flex items-start space-x-3">
+                <!-- Mobile Notification -->
+                <div class="flex items-center bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-100">
                   <input
                     type="checkbox"
                     v-model="cancellationForm.notifySms"
-                    class="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 mr-3"
                   />
-                  <div class="flex-1">
+                  <div>
                     <div class="text-sm font-medium text-gray-900">Mobile (SMS)</div>
-                    <div class="text-xs text-gray-600 mt-1">{{ subscription?.customerPhone || 'No phone available' }}</div>
+                    <div class="text-xs text-gray-600">{{ subscription?.customerPhone || 'No phone available' }}</div>
                   </div>
-                </label>
+                </div>
               </div>
             </div>
 
@@ -602,6 +604,22 @@ const loadSubscriptionDetails = async () => {
     if (!found) {
       error.value = `Subscription with ID ${subscriptionId} not found.`
       return
+    }
+
+    // If customerEmail or customerPhone is missing, fetch from customersData
+    if (!found.customerEmail || !found.customerPhone) {
+      try {
+        // Dynamically import customersData from useCustomers.ts
+        // Use relative import for Vite/Vue
+        const { customersData } = await import('../../composables/useCustomers')
+  const customer = customersData.value.find((c: any) => c.name === found.customerName)
+        if (customer) {
+          if (!found.customerEmail && customer.email) found.customerEmail = customer.email
+          if (!found.customerPhone && customer.phone) found.customerPhone = customer.phone
+        }
+      } catch (err) {
+        console.warn('Could not fetch customer contact from useCustomers:', err)
+      }
     }
 
     subscription.value = found

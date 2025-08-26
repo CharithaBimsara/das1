@@ -38,7 +38,7 @@
       
 
       <!-- Payments Table -->
-      <div class="bg-white rounded-xl shadow-card overflow-hidden">
+      <div class="bg-white rounded-xl shadow-card">
         <div class="bg-white border-b  shadow-card p-6">
         <div class="flex flex-col md:flex-row md:items-end md:space-x-1 gap-4 relative">
           <div class="relative md:w-48">

@@ -160,10 +160,20 @@
 						<label class="text-xs font-medium text-green-600 uppercase tracking-wider">Subscription Type</label>
 						<p class="text-lg font-semibold text-green-900 mt-1 capitalize">{{ subscription.subscriptionType }}</p>
 					</div>
-					<div class="text-center p-4 bg-purple-50 rounded-lg">
-						<label class="text-xs font-medium text-purple-600 uppercase tracking-wider">Next Billing</label>
-						<p class="text-lg font-semibold text-purple-900 mt-1">{{ formatSubscriptionDate(subscription.nextBillingDate || '') }}</p>
-					</div>
+								<div class="text-center p-4 bg-purple-50 rounded-lg">
+									<label class="text-xs font-medium text-purple-600 uppercase tracking-wider">
+										<template v-if="subscription.status === 'cancelled'">Cancel Booking Date</template>
+										<template v-else>Next Billing</template>
+									</label>
+									<p class="text-lg font-semibold text-purple-900 mt-1">
+										<template v-if="subscription.status === 'cancelled'">
+											{{ formatSubscriptionDate(subscription.cancelledDate || subscription.nextBillingDate || '') }}
+										</template>
+										<template v-else>
+											{{ formatSubscriptionDate(subscription.nextBillingDate || '') }}
+										</template>
+									</p>
+								</div>
 				</div>
 			</div>
 
@@ -363,32 +373,33 @@ const messageForm = ref({
 
 // Subscription type definition
 interface Subscription {
-	id: string;
-	productName: string;
-	productType: string;
-	productId?: string;
-	productImage?: string;
-	customerName: string;
-	customerEmail?: string;
-	customerPhone?: string;
-	userType: string;
-	date?: string;
-	startTime?: string;
-	endTime?: string;
-	duration?: string;
-	totalPrice: number;
-	basePrice?: number;
-	additionalFacilities?: number;
-	taxes?: number;
-	status: string;
-	location?: string;
-	locationName?: string;
-	capacity?: number;
-	facilities?: string[];
-	subscriptionType?: string;
-	subscribedDate?: string;
-	nextBillingDate?: string;
-	customerMessage?: string;
+		id: string;
+		productName: string;
+		productType: string;
+		productId?: string;
+		productImage?: string;
+		customerName: string;
+		customerEmail?: string;
+		customerPhone?: string;
+		userType: string;
+		date?: string;
+		startTime?: string;
+		endTime?: string;
+		duration?: string;
+		totalPrice: number;
+		basePrice?: number;
+		additionalFacilities?: number;
+		taxes?: number;
+		status: string;
+		location?: string;
+		locationName?: string;
+		capacity?: number;
+		facilities?: string[];
+		subscriptionType?: string;
+		subscribedDate?: string;
+		nextBillingDate?: string;
+		customerMessage?: string;
+		cancelledDate?: string;
 }
 
 // Reactive subscriptions data
@@ -399,6 +410,12 @@ const subscription = computed<Subscription | null>(() => {
 	const subId = route.params.id as string
 	const foundSub = allSubscriptions.value.find((s: Subscription) => s.id === subId)
 	if (foundSub) {
+		// If cancelled and no cancelledDate, set to today
+		let cancelledDate = foundSub.cancelledDate
+		if (foundSub.status === 'cancelled' && !cancelledDate) {
+			const today = new Date()
+			cancelledDate = today.toISOString().split('T')[0]
+		}
 		return {
 			...foundSub,
 			customerEmail: foundSub.customerEmail || `${foundSub.customerName?.toLowerCase().replace(' ', '.')}@example.com`,
@@ -412,7 +429,8 @@ const subscription = computed<Subscription | null>(() => {
 			locationName: foundSub.locationName ?? 'Location Not Specified',
 			subscriptionType: foundSub.subscriptionType ?? 'monthly',
 			subscribedDate: foundSub.subscribedDate ?? foundSub.date,
-			nextBillingDate: foundSub.nextBillingDate ?? foundSub.date
+			nextBillingDate: foundSub.nextBillingDate ?? foundSub.date,
+			cancelledDate: cancelledDate
 		}
 	}
 	return null

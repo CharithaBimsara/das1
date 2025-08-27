@@ -277,7 +277,7 @@ const searchQuery = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 20
 const autoRefresh = ref(false)
-const refreshInterval = ref<NodeJS.Timeout | null>(null)
+const refreshInterval = ref<ReturnType<typeof setTimeout> | null>(null)
 
 // Filters
 const filters = ref({

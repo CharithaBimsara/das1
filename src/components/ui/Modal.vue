@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 
 interface Props {
   modelValue: boolean
@@ -63,6 +63,8 @@ const emit = defineEmits<{
   'close': []
 }>()
 
+const slots = useSlots()
+
 const modalClass = computed(() => {
   const baseClass = 'bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto'
   
@@ -78,7 +80,7 @@ const modalClass = computed(() => {
 })
 
 const bodyClass = computed(() => {
-  return props.$slots.footer ? 'p-6' : 'p-6 pb-6'
+  return slots.footer ? 'p-6' : 'p-6 pb-6'
 })
 
 const closeModal = () => {

@@ -367,7 +367,7 @@
                       <span class="text-sm font-medium text-gray-900">{{ comment.author }}</span>
                       <span class="text-xs text-gray-500">{{ formatDate(comment.timestamp) }}</span>
                     </div>
-                    <p class="text-sm text-gray-700">{{ comment.message }}</p>
+                    <p class="text-sm text-gray-700">{{ comment.content }}</p>
                   </div>
                 </div>
               </div>
@@ -489,11 +489,38 @@ import {
   mdiCog
 } from '@mdi/js'
 
+// Types
+interface AuthItem {
+  id: string
+  type: string
+  title: string
+  description: string
+  requestedBy: string
+  requestedByRole: string
+  requestedByEmail: string
+  requestedByAvatar: string
+  submittedAt: string
+  priority: string
+  reason?: string
+  changes: Array<{
+    field: string
+    oldValue: any
+    newValue: any
+  }>
+  comments: Array<{
+    id: string
+    author: string
+    avatar: string
+    content: string
+    timestamp: string
+  }>
+}
+
 // State
 const activeTab = ref('all')
 const showDetailsModal = ref(false)
 const showConfirmModal = ref(false)
-const selectedItem = ref(null)
+const selectedItem = ref<AuthItem | null>(null)
 const confirmAction = ref('')
 const actionReason = ref('')
 const newComment = ref('')
@@ -799,8 +826,10 @@ const rejectItem = (item: any) => {
 }
 
 const finalizeApproval = () => {
+  if (!selectedItem.value) return
+  
   // Remove from pending items
-  const index = pendingItems.value.findIndex(item => item.id === selectedItem.value.id)
+  const index = pendingItems.value.findIndex(item => item.id === selectedItem.value!.id)
   if (index !== -1) {
     pendingItems.value.splice(index, 1)
   }
@@ -815,8 +844,10 @@ const finalizeApproval = () => {
 }
 
 const finalizeRejection = () => {
+  if (!selectedItem.value) return
+  
   // Remove from pending items
-  const index = pendingItems.value.findIndex(item => item.id === selectedItem.value.id)
+  const index = pendingItems.value.findIndex(item => item.id === selectedItem.value!.id)
   if (index !== -1) {
     pendingItems.value.splice(index, 1)
   }
@@ -841,12 +872,12 @@ const approveAllPending = () => {
 }
 
 const addComment = () => {
-  if (newComment.value.trim()) {
+  if (newComment.value.trim() && selectedItem.value) {
     selectedItem.value.comments.push({
       id: `C-${Date.now()}`,
       author: 'Current User',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=faces',
-      message: newComment.value,
+      content: newComment.value,
       timestamp: new Date().toISOString()
     })
     newComment.value = ''

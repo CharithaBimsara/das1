@@ -14,13 +14,13 @@
           </div>
         <div class="flex items-center space-x-3">
           <button
-            @click="exportToExcel"
+            @click="exportToCSV"
             class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
           >
             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
             </svg>
-            <span>Export Excel</span>
+            <span>Export CSV</span>
           </button>
           <button
             @click="showCommissionModal = true"
@@ -378,7 +378,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import * as XLSX from 'xlsx'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { 
   mdiCog, 
@@ -758,28 +757,40 @@ const resetFilters = () => {
   sortOrder.value = 'desc'
 }
 
-const exportToExcel = () => {
-  // Prepare data for Excel
-  const data = filteredPayments.value.map(payment => ({
-    'Booking ID': payment.bookingId,
-    'Location': payment.locationName,
-    'Product': payment.productType,
-    'Additional Facilities': payment.additionalFacilities.map(f => f.name).join(', '),
-    'Total Amount': payment.totalAmount,
-    'PayMedia Commission': payment.commission,
-    'Commission Rate (%)': payment.commissionRate,
-    'Status': payment.status,
-    'Date': payment.date,
-    'Time': payment.time
+const exportToCSV = () => {
+  // Fallback CSV export (no xlsx dependency)
+  const rows = filteredPayments.value.map(payment => ({
+    bookingId: payment.bookingId,
+    location: payment.locationName,
+    product: payment.productType,
+    additionalFacilities: payment.additionalFacilities.map((f: any) => f.name).join('; '),
+    totalAmount: payment.totalAmount,
+    commission: payment.commission,
+    commissionRate: payment.commissionRate,
+    status: payment.status,
+    date: payment.date,
+    time: payment.time
   }))
 
-  // Create worksheet and workbook
-  const worksheet = XLSX.utils.json_to_sheet(data)
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Payments')
+  if (!rows.length) {
+    alert('No payments to export')
+    return
+  }
 
-  // Generate Excel file and trigger download
-  XLSX.writeFile(workbook, 'payments.xlsx')
+  const header = Object.keys(rows[0]).join(',')
+  const csv = [header]
+    .concat(rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')))
+    .join('\n')
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.setAttribute('href', url)
+  link.setAttribute('download', 'payments.csv')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 const saveCommissionSettings = () => {

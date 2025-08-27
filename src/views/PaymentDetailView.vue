@@ -176,7 +176,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import jsPDF from 'jspdf'
 import { useRoute } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { 
@@ -240,76 +239,56 @@ const getStatusClass = (status: string) => {
 }
 
 const downloadInvoice = () => {
-  // Generate and download a PDF invoice with table layout
-  const doc = new jsPDF()
+  // Fallback: open printable invoice in a new window (user can print-to-PDF)
   const p = payment.value
+  const printScript = '<scr' + 'ipt>window.onload = function(){ window.print(); }</scr' + 'ipt>'
 
-  doc.setFontSize(18)
-  doc.text('Invoice', 14, 18)
-  doc.setFontSize(12)
+  const invoiceHtml = `
+    <html>
+      <head>
+        <title>Invoice ${p.paymentId}</title>
+        <style>
+          body { font-family: Arial, Helvetica, sans-serif; padding: 20px; color: #111827 }
+          h1 { font-size: 20px }
+          .row { display: flex; justify-content: space-between; margin-bottom: 6px }
+          .section { margin-top: 12px }
+        </style>
+      </head>
+      <body>
+        <h1>Invoice</h1>
+        <div class="section">
+          <div class="row"><strong>Invoice #</strong><span>${p.paymentId}</span></div>
+          <div class="row"><strong>Date</strong><span>${p.date} ${p.time}</span></div>
+          <div class="row"><strong>Customer</strong><span>${p.customerName}</span></div>
+          <div class="row"><strong>Email</strong><span>${p.customerEmail}</span></div>
+          <div class="row"><strong>Booking ID</strong><span>${p.bookingId}</span></div>
+          <div class="row"><strong>Location</strong><span>${p.locationName}</span></div>
+        </div>
+        <div class="section">
+          <h3>Product</h3>
+          <div>${p.productName} (${p.productType})</div>
+        </div>
+        <div class="section">
+          <h3>Additional Facilities</h3>
+          ${p.additionalFacilities && p.additionalFacilities.length > 0 ? `<ul>${p.additionalFacilities.map((f:any) => `<li>${f.name} - $${f.price}</li>`).join('')}</ul>` : '<div>None</div>'}
+        </div>
+        <div class="section">
+          <div class="row"><strong>Total Amount</strong><span>$${p.totalAmount}</span></div>
+          <div class="row"><strong>Commission</strong><span>$${p.commission} (${p.commissionRate}%)</span></div>
+          <div class="row"><strong>Net to Partner</strong><span>$${(p.totalAmount - p.commission).toFixed(2)}</span></div>
+        </div>
+    ` + printScript + `
+      </body>
+    </html>
+  `
 
-  // Main info table
-  const mainHeaders = ['Field', 'Value']
-  const mainRows = [
-    ['Invoice #', p.paymentId],
-    ['Date', `${p.date} ${p.time}`],
-    ['Customer', p.customerName],
-    ['Email', p.customerEmail],
-    ['Booking ID', p.bookingId],
-    ['Location', p.locationName],
-    ['Product', `${p.productName} (${p.productType})`],
-    ['Status', p.status === 'pending' ? 'Pending (Subscription)' : 'Paid']
-  ]
-
-  let y = 26
-  // Draw main info table
-  doc.setFont('bold')
-  doc.text(mainHeaders[0], 14, y)
-  doc.text(mainHeaders[1], 70, y)
-  doc.setFont('normal')
-  y += 6
-  mainRows.forEach(row => {
-    doc.text(row[0], 14, y)
-    doc.text(String(row[1]), 70, y)
-    y += 6
-  })
-
-  // Additional Facilities Table
-  y += 4
-  doc.setFont('bold')
-  doc.text('Additional Facilities', 14, y)
-  doc.setFont('normal')
-  y += 6
-  if (p.additionalFacilities && p.additionalFacilities.length > 0) {
-    doc.text('Name', 18, y)
-    doc.text('Price', 70, y)
-    y += 6
-    p.additionalFacilities.forEach(facility => {
-      doc.text(facility.name, 18, y)
-      doc.text(`$${facility.price}`, 70, y)
-      y += 6
-    })
+  const w = window.open('', '_blank')
+  if (w) {
+    w.document.write(invoiceHtml)
+    w.document.close()
   } else {
-    doc.text('None', 18, y)
-    y += 6
+    alert('Unable to open print window. Please allow popups for this site or use the browser print feature.')
   }
-
-  // Price Breakdown
-  y += 4
-  doc.setFont('bold')
-  doc.text('Price Breakdown', 14, y)
-  doc.setFont('normal')
-  y += 6
-  doc.text('Total Amount', 18, y)
-  doc.text(`$${p.totalAmount}`, 70, y)
-  y += 6
-  doc.text('Commission', 18, y)
-  doc.text(`$${p.commission} (${p.commissionRate}%)`, 70, y)
-  y += 6
-  doc.text('Net Amount to Partner', 18, y)
-  doc.text(`$${(p.totalAmount - p.commission).toFixed(2)}`, 70, y)
-
-  doc.save(`invoice_${p.paymentId}.pdf`)
 }
 
 onMounted(() => {

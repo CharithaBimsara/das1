@@ -509,13 +509,27 @@ import {
   mdiCheckCircle
 } from '@mdi/js'
 
+// User interface
+interface User {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  department: string | null
+  role: 'super-admin' | 'admin' | 'manager' | 'operator'
+  status: 'active' | 'inactive' | 'pending' | 'suspended'
+  lastLogin: string | null
+  permissions: string[]
+  avatar: string
+}
+
 // State
 const searchQuery = ref('')
 const showAddModal = ref(false)
 const showEditModal = ref(false)
 const showViewModal = ref(false)
 const showSuccessModal = ref(false)
-const selectedUser = ref(null)
+const selectedUser = ref<User | null>(null)
 
 // Filters
 const filters = ref({
@@ -552,12 +566,12 @@ const availablePermissions = [
 
 // Form data
 const form = ref({
-  id: null as number | null,
+  id: null as string | null,
   name: '',
   email: '',
   phone: '',
   department: '',
-  role: '',
+  role: '' as 'super-admin' | 'admin' | 'manager' | 'operator' | '',
   status: 'pending' as 'active' | 'inactive' | 'pending' | 'suspended',
   permissions: [] as string[],
   sendWelcomeEmail: true,
@@ -566,7 +580,7 @@ const form = ref({
 })
 
 // Sample users data
-const users = ref([
+const users = ref<User[]>([
   {
     id: 'USR-001',
     name: 'John Administrator',
@@ -718,14 +732,21 @@ const resetFilters = () => {
   }
 }
 
-const viewUser = (user: any) => {
+const viewUser = (user: User) => {
   selectedUser.value = user
   showViewModal.value = true
 }
 
-const editUser = (user: any) => {
+const editUser = (user: User) => {
   form.value = { 
-    ...user,
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone || '',
+    department: user.department || '',
+    role: user.role,
+    status: user.status,
+    permissions: [...user.permissions],
     sendWelcomeEmail: false,
     requirePasswordChange: false,
     enable2FA: false
@@ -734,7 +755,7 @@ const editUser = (user: any) => {
   showViewModal.value = false
 }
 
-const toggleUserStatus = (user: any) => {
+const toggleUserStatus = (user: User) => {
   const action = user.status === 'suspended' ? 'activate' : 'suspend'
   
   if (confirm(`Are you sure you want to ${action} ${user.name}?`)) {
@@ -770,12 +791,17 @@ const resetForm = () => {
 const saveUser = () => {
   if (showAddModal.value) {
     // Add new user - send to dual auth
-    const newUser = {
-      ...form.value,
+    const newUser: User = {
       id: `USR-${String(users.value.length + 1).padStart(3, '0')}`,
+      name: form.value.name,
+      email: form.value.email,
+      phone: form.value.phone || null,
+      department: form.value.department || null,
+      role: form.value.role as User['role'], // Type assertion since we validate in template
+      status: 'pending', // Always pending for new users
       lastLogin: null,
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces',
-      status: 'pending' // Always pending for new users
+      permissions: [...form.value.permissions],
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces'
     }
     
     // In a real app, this would be sent to dual auth system
@@ -788,12 +814,17 @@ const saveUser = () => {
   } else {
     // Edit existing user
     const index = users.value.findIndex(u => u.id === form.value.id)
-    if (index !== -1) {
+    if (index !== -1 && form.value.id) {
       users.value[index] = { 
-        ...users.value[index], 
-        ...form.value,
-        // Don't update these fields from form
+        id: form.value.id,
+        name: form.value.name,
+        email: form.value.email,
+        phone: form.value.phone || null,
+        department: form.value.department || null,
+        role: form.value.role as User['role'],
+        status: form.value.status,
         lastLogin: users.value[index].lastLogin,
+        permissions: [...form.value.permissions],
         avatar: users.value[index].avatar
       }
     }

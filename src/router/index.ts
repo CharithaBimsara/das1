@@ -63,6 +63,9 @@ import AdminProfileView from '@/views/AdminProfileView.vue'
 // Placeholder views
 import PlaceholderView from '@/views/PlaceholderView.vue'
 
+// Promotions
+import PromotionView from '@/views/PromotionView.vue'
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
@@ -241,6 +244,12 @@ const routes: RouteRecordRaw[] = [
     path: '/profile',
     name: 'AdminProfile',
     component: AdminProfileView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/promotions',
+    name: 'Promotions',
+    component: PromotionView,
     meta: { requiresAuth: true }
   }
 ]

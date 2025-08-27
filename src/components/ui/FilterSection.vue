@@ -46,6 +46,6 @@ const gridClass = computed(() => {
     6: 'grid-cols-1 md:grid-cols-6'
   }
   
-  return `grid gap-4 ${gridCols[props.columns] || gridCols[3]}`
+  return `grid gap-4 ${gridCols[props.columns as keyof typeof gridCols] || gridCols[3]}`
 })
 </script>

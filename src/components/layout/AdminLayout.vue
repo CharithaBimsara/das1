@@ -136,7 +136,8 @@ import {
   mdiBell,
   mdiBookOpen,
   mdiCancel,
-  mdiSeat
+  mdiSeat,
+  mdiBullhorn
 } from '@mdi/js'
 
 const route = useRoute()
@@ -162,7 +163,8 @@ const mdiIcons = {
   mdiHistory,
   mdiBell,
   mdiBookOpen,
-  mdiCancel
+  mdiCancel,
+  mdiBullhorn
 }
 
 // Menu items
@@ -174,6 +176,7 @@ const menuItems = [
   { name: 'Products', path: '/products', icon: mdiBookOpen },
   { name: 'Locations', path: '/locations', icon: mdiMapMarker },
   { name: 'Payments', path: '/payments', icon: mdiCreditCard },
+  { name: 'Promotions', path: '/promotions', icon: mdiBullhorn },
   { name: 'User Management', path: '/user-management', icon: mdiAccountSettings },
   { name: 'Dual Auth', path: '/dual-auth', icon: mdiShieldCheck },
   { name: 'Reports', path: '/reports', icon: mdiChartLine },

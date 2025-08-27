@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 // Auth
 import LoginView from '@/views/auth/LoginView.vue'
+import OnboardingView from '@/views/auth/OnboardingView.vue'
 
 // Dashboard
 import DashboardView from '@/views/DashboardView.vue'
@@ -76,6 +77,12 @@ const routes: RouteRecordRaw[] = [
     name: 'Login',
     component: LoginView,
     meta: { requiresAuth: false }
+  },
+  {
+    path: '/onboarding',
+    name: 'Onboarding',
+    component: OnboardingView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/dashboard',
@@ -262,10 +269,20 @@ const router = createRouter({
 // Auth guard
 router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('auth-token')
+  const passwordReset = localStorage.getItem('password-reset')
   
   if (to.meta.requiresAuth && !isAuthenticated) {
+    // Not authenticated, redirect to login
     next('/login')
   } else if (to.path === '/login' && isAuthenticated) {
+    // Already authenticated, check if onboarding is needed
+    if (!passwordReset) {
+      next('/onboarding')
+    } else {
+      next('/dashboard')
+    }
+  } else if (to.path === '/onboarding' && isAuthenticated && passwordReset) {
+    // User has already completed onboarding, redirect to dashboard
     next('/dashboard')
   } else {
     next()

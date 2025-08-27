@@ -18,22 +18,22 @@
       <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
         <div class="space-y-4">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
-              Email address
+            <label for="username" class="block text-sm font-medium text-gray-700">
+              Username
             </label>
             <div class="mt-1 relative">
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="username"
+                name="username"
+                type="text"
                 required
-                v-model="form.email"
+                v-model="form.username"
                 class="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your email"
+                placeholder="Enter your username"
               />
               <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path :d="mdiEmail" />
+                  <path :d="mdiAccount" />
                 </svg>
               </div>
             </div>
@@ -107,7 +107,7 @@
         <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h3 class="text-sm font-medium text-blue-900 mb-2">Demo Credentials</h3>
           <div class="text-sm text-blue-700 space-y-1">
-            <p><strong>Email:</strong> admin@cowork.com</p>
+            <p><strong>Username:</strong> admin</p>
             <p><strong>Password:</strong> admin123</p>
           </div>
         </div>
@@ -136,13 +136,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { mdiOfficeBuilding, mdiEmail, mdiEye, mdiEyeOff, mdiAlert } from '@mdi/js'
+import { mdiOfficeBuilding, mdiAccount, mdiEye, mdiEyeOff, mdiAlert } from '@mdi/js'
 
 const router = useRouter()
 
 // Form state
 const form = ref({
-  email: '',
+  username: '',
   password: '',
   remember: false
 })
@@ -161,14 +161,22 @@ const handleLogin = async () => {
     await new Promise(resolve => setTimeout(resolve, 1000))
 
     // Demo authentication
-    if (form.value.email === 'admin@cowork.com' && form.value.password === 'admin123') {
+    if (form.value.username === 'admin' && form.value.password === 'admin123') {
       // Store auth token
       localStorage.setItem('auth-token', 'demo-token-123')
       
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Check if password has already been reset
+      const passwordReset = localStorage.getItem('password-reset')
+      
+      if (!passwordReset && form.value.password === 'admin123') {
+        // First login with default password - redirect to onboarding
+        router.push('/onboarding')
+      } else {
+        // Password has been reset - redirect to dashboard
+        router.push('/dashboard')
+      }
     } else {
-      error.value = 'Invalid email or password. Please use the demo credentials provided.'
+      error.value = 'Invalid username or password. Please use the demo credentials provided.'
     }
   } catch (err) {
     error.value = 'An error occurred. Please try again.'

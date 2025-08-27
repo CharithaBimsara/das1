@@ -499,25 +499,27 @@
 
             <!-- Action Buttons for each form -->
             <div class="flex items-center justify-between pt-8 border-t border-gray-200">
-              <!-- Left side: Add Another Product -->
-              <button type="button" @click="addAnotherProduct"
-                class="px-6 py-3 border-2 border-primary-600 text-primary-600 rounded-xl hover:bg-primary-50 hover:border-primary-700 transition-all duration-200 flex items-center space-x-3 font-medium shadow-sm hover:shadow-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Add Another Product</span>
-              </button>
-              <!-- Right side: Create Product and Cancel -->
+              <!-- Left side: Add Another Product (show only on the last form) -->
+              <div>
+                <button v-if="idx === products.length - 1" type="button" @click="addAnotherProduct"
+                  class="px-6 py-3 border-2 border-primary-600 text-primary-600 rounded-xl hover:bg-primary-50 hover:border-primary-700 transition-all duration-200 flex items-center space-x-3 font-medium shadow-sm hover:shadow-md">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Add Another Product</span>
+                </button>
+              </div>
+              <!-- Right side: Create Product (only on last form) and Cancel -->
               <div class="flex items-center gap-4">
-                <button type="submit"
+                <button v-if="idx === products.length - 1" type="submit"
                   class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
                   <span>Create Product</span>
                 </button>
-                <div v-if="products.length > 1 && idx > 0" class="flex items-center">
-                  <button type="button" @click="removeProductForm(idx)"
+                <div class="flex items-center">
+                  <button type="button" @click="cancelProduct(idx)"
                     class="px-6 py-3 border-2 border-red-600 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-700 transition-all duration-200 flex items-center space-x-3 font-medium shadow-sm hover:shadow-md">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -844,6 +846,8 @@ const resetForm = () => {
   }]
   hotDeskPricingType.value = 'hour'
   dedicatedDeskPricingType.value = 'month'
+  // reset per-form validation state
+  showValidation.value = [false]
 }
 
 const addAnotherProduct = () => {
@@ -881,42 +885,99 @@ const removeProductForm = (index: number) => {
   }
 }
 
-const saveProduct = (idx: number) => {
-  // Validate single product form
-  const product = products.value[idx]
-  showValidation.value[idx] = true;
-  const basicValidation = product.locationId && 
-    product.type && 
-    product.name.trim() && 
-    product.maxSeatingCapacity > 0 &&
-    product.openHours.start &&
-    product.openHours.end &&
-    product.openDays.length > 0
-  let valid = basicValidation
-  if (valid) {
-    switch (product.type) {
-      case 'Meeting Room':
-        valid = product.pricePerHour > 0
-        break
-      case 'Hot Desk':
-        valid = product.pricePerHour > 0 && product.pricePerDay > 0
-        break
-      case 'Dedicated Desk':
-        valid = product.pricePerMonth > 0 && product.pricePerYear > 0
-        break
-      default:
-        valid = false
+const cancelProduct = (index: number) => {
+  // If multiple forms exist, remove the selected one. Otherwise reset the single form.
+  if (products.value.length > 1) {
+    removeProductForm(index)
+  } else {
+    // Reset the first form to initial blank values
+    products.value[0] = {
+      locationId: '',
+      type: '',
+      images: [] as string[],
+      name: '',
+      description: '',
+      maxSeatingCapacity: 1,
+      pricePerHour: 0,
+      pricePerDay: 0,
+      pricePerWeek: 0,
+      pricePerMonth: 0,
+      pricePerYear: 0,
+      openDays: [] as string[],
+      openHours: {
+        start: '09:00',
+        end: '17:00'
+      },
+      defaultFacilities: [] as string[],
+      additionalFacilities: [] as Array<{
+        name: string
+        pricePerHour: number
+      }> ,
+      status: 'active'
     }
+    showValidation.value = [false]
+    hotDeskPricingType.value = 'hour'
+    dedicatedDeskPricingType.value = 'month'
   }
-  if (!valid) {
-    // Do not show alert, just show red borders via showValidation
+}
+
+// validate a single product object and return boolean
+const validateProduct = (product: any) => {
+  const basicValidation = !!(product.locationId && product.type && product.name && product.name.trim() && product.maxSeatingCapacity > 0 && product.openHours?.start && product.openHours?.end && product.openDays && product.openDays.length > 0)
+
+  if (!basicValidation) return false
+
+  switch (product.type) {
+    case 'Meeting Room':
+      return product.pricePerHour > 0
+    case 'Hot Desk':
+      return product.pricePerHour > 0 && product.pricePerDay > 0
+    case 'Dedicated Desk':
+      return product.pricePerMonth > 0 && product.pricePerYear > 0
+    default:
+      return false
+  }
+}
+
+const saveProduct = (idx: number) => {
+  const lastIndex = products.value.length - 1
+
+  // If creating from the last form and multiple forms exist, validate all forms
+  if (idx === lastIndex && products.value.length > 1) {
+    // ensure validation flags exist for all forms
+    for (let i = 0; i < products.value.length; i++) {
+      showValidation.value[i] = true
+    }
+
+    const allValid = products.value.every(p => validateProduct(p))
+    if (!allValid) {
+      // show red borders via showValidation and stop
+      return
+    }
+
+    // All forms valid - create all products (replace with API call)
+    console.log('Creating products:', products.value)
+    alert('Products created successfully!')
+    // reset form list
+    resetForm()
     return
   }
-  // Here you would typically send the data to your API
+
+  // Otherwise validate single form
+  const product = products.value[idx]
+  showValidation.value[idx] = true
+  const valid = validateProduct(product)
+  if (!valid) return
+
+  // Create single product
   console.log('Creating product:', product)
   alert('Product created successfully!')
-  // Optionally remove the form after creation
-  // removeProductForm(idx)
+  // remove or reset the form after creation - here we reset single form to blank
+  if (products.value.length === 1) {
+    resetForm()
+  } else {
+    removeProductForm(idx)
+  }
 }
 // ...existing code...
 </script>

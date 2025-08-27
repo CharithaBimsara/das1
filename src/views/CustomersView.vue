@@ -94,7 +94,6 @@
                     </div>
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-900">{{ customer.name }}</div>
-                      <div class="text-sm text-gray-500">ID: {{ customer.id }}</div>
                     </div>
                   </div>
                 </td>

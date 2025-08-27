@@ -22,7 +22,7 @@
             </div>
             <div>
               <h1 class="text-2xl font-bold text-gray-900">{{ customer.name }}</h1>
-              <p class="text-gray-600 mt-1">Customer ID: {{ customer.id }}</p>
+              
               
               <!-- Profile Information -->
               <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
